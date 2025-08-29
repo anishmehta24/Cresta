@@ -9,6 +9,7 @@ import RideHistory from './pages/RideHistory'
 import RentalHistory from './pages/RentalHistory'
 // import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
 import './App.css'
 import LoginPage from './pages/auth/LoginPage'
@@ -16,7 +17,7 @@ import LoginPage from './pages/auth/LoginPage'
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gray-900 flex flex-col">
         <Header />
         <main className="flex-1">
           <Routes>
@@ -26,6 +27,7 @@ function App() {
             <Route path="/rental-cart" element={<RentalCart />} />
             <Route path="/my-rides" element={<RideHistory />} />
             <Route path="/my-rentals" element={<RentalHistory />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/login" element={<LoginPage/>} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="*" element={<NotFoundPage />} />

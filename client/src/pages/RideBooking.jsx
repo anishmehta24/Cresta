@@ -77,22 +77,22 @@ const RideBooking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Book a Ride</h1>
-          <p className="text-gray-600">Enter your trip details and we'll find you a driver</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Book a Ride</h1>
+          <p className="text-gray-300">Enter your trip details and we'll find you a driver</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-gray-800 rounded-xl shadow-lg p-6">
               <form onSubmit={handleLocationSubmit} className="space-y-6">
                 {/* Location Inputs */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Pickup Location
                     </label>
                     <div className="relative">
@@ -105,14 +105,14 @@ const RideBooking = () => {
                         value={formData.pickupLocation}
                         onChange={handleInputChange}
                         placeholder="Enter pickup address or location"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Drop-off Location
                     </label>
                     <div className="relative">
@@ -125,7 +125,7 @@ const RideBooking = () => {
                         value={formData.dropoffLocation}
                         onChange={handleInputChange}
                         placeholder="Enter destination address"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
                     </div>
@@ -135,7 +135,7 @@ const RideBooking = () => {
                 {/* Date and Time */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Pickup Date
                     </label>
                     <input
