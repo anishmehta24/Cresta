@@ -7,9 +7,9 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">D</span>
+                <span className="text-white font-bold text-lg">C</span>
               </div>
-              <span className="text-xl font-bold">DriveApp</span>
+              <span className="text-xl font-bold">Cresta</span>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
               Your trusted partner for rides and car rentals. Professional drivers, well-maintained vehicles, and exceptional service.
@@ -58,7 +58,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400">
-            © 2025 DriveApp. All rights reserved. Professional transportation services.
+            © 2025 Cresta. All rights reserved. Professional transportation services.
           </p>
         </div>
       </div>

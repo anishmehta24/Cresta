@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { toast } from '../../services/toastBus'
 import { useAuth } from '../../context/AuthContext'
 
 export default function LoginPage() {
@@ -13,6 +14,16 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { login } = useAuth()
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const nextPath = searchParams.get('next') || sessionStorage.getItem('postLoginRedirect') || '/'
+  const reason = searchParams.get('reason')
+
+  useEffect(() => {
+    if (reason === 'auth') {
+      toast.info('Please sign in to continue')
+    }
+  }, [reason])
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -33,8 +44,12 @@ export default function LoginPage() {
         password: formData.password
       })
 
-      // Redirect to home page on successful login
-      navigate('/')
+      if (nextPath && nextPath !== '/') {
+        sessionStorage.removeItem('postLoginRedirect')
+        navigate(nextPath)
+      } else {
+        navigate('/')
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.')
     } finally {
@@ -49,9 +64,9 @@ export default function LoginPage() {
         <div className="flex justify-center">
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">D</span>
+              <span className="text-white font-bold text-xl">C</span>
             </div>
-            <span className="text-2xl font-bold text-white">DriveApp</span>
+            <span className="text-2xl font-bold text-white">Cresta</span>
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-white">

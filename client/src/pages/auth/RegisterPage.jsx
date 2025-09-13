@@ -92,9 +92,9 @@ const RegisterPage = () => {
         <div className="flex justify-center">
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">D</span>
+              <span className="text-white font-bold text-xl">C</span>
             </div>
-            <span className="text-2xl font-bold text-white">DriveApp</span>
+            <span className="text-2xl font-bold text-white">Cresta</span>
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold text-white">

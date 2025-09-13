@@ -40,9 +40,9 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">D</span>
+              <span className="text-white font-bold text-lg">C</span>
             </div>
-            <span className="text-xl font-bold text-white">DriveApp</span>
+            <span className="text-xl font-bold text-white">Cresta</span>
           </Link>
 
           {/* Desktop Navigation */}

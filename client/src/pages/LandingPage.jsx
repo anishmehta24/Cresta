@@ -92,7 +92,7 @@ const LandingPage = () => {
   <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-semibold mb-4 tracking-tight">Why Choose DriveApp?</h2>
+            <h2 className="text-3xl lg:text-4xl font-semibold mb-4 tracking-tight">Why Choose Cresta?</h2>
             <p className="text-xl text-muted max-w-3xl mx-auto">We provide exceptional transportation services with a focus on safety, reliability, and customer satisfaction</p>
           </div>
 
@@ -115,7 +115,7 @@ const LandingPage = () => {
       <section className="py-20 border-t border-[var(--mono-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl lg:text-4xl font-semibold mb-6 tracking-tight">Ready to Get Started?</h2>
-          <p className="text-xl text-muted mb-10 max-w-2xl mx-auto">Join thousands of satisfied customers who trust DriveApp for their transportation needs.</p>
+          <p className="text-xl text-muted mb-10 max-w-2xl mx-auto">Join thousands of satisfied customers who trust Cresta for their transportation needs.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/book-ride" className="btn btn-primary text-base px-10 py-4">Book Your First Ride</Link>
             <Link to="/register" className="btn btn-outline text-base px-10 py-4">Create Account</Link>
