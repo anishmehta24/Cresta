@@ -1,2 +1,53 @@
 @import "tailwindcss";
 
+/* Global monochrome theme override */
+html, body, #root {
+	background-color: #000 !important;
+	color: #fff !important;
+}
+
+/* Force all text to white unless explicitly inverted */
+body * {
+	color: #fff !important;
+	border-color: rgba(255,255,255,0.25) !important; /* subtle translucent borders */
+}
+
+/* Desaturate all imagery & backgrounds */
+img, video, picture, canvas, svg, [style*="background"], .bg-cover, .bg-center {
+	filter: grayscale(100%) !important;
+}
+
+/* Tailwind utility background classes neutralization to black/near-black */
+[class*="bg-"], .bg-white, .bg-gray-50, .bg-gray-100, .bg-gray-200, .bg-gray-300, .bg-gray-400, .bg-gray-500, .bg-gray-600, .bg-gray-700, .bg-gray-800, .bg-gray-900, .bg-slate-50, .bg-slate-100, .bg-slate-200, .bg-slate-300, .bg-slate-400, .bg-slate-500, .bg-slate-600, .bg-slate-700, .bg-slate-800, .bg-slate-900 {
+	background-color: #000 !important;
+}
+
+/* Buttons & interactive elements: outline style */
+button, [role="button"], input[type=button], input[type=submit], input[type=reset] {
+	background: #111 !important;
+	color: #fff !important;
+	border: 1px solid #444 !important;
+}
+button:hover, [role="button"]:hover, input[type=button]:hover, input[type=submit]:hover, input[type=reset]:hover {
+	background: #222 !important;
+	border-color: #666 !important;
+}
+
+/* Links */
+a { color: #fff !important; text-decoration: underline; }
+a:hover { color: #ddd !important; }
+
+/* Form fields */
+input, select, textarea {
+	background: #000 !important;
+	color: #fff !important;
+	border: 1px solid #333 !important;
+}
+input:focus, select:focus, textarea:focus { outline: 1px solid #666 !important; }
+
+/* Remove any box-shadows that could introduce color tints */
+* { box-shadow: none !important; }
+
+/* Utility to opt-out on specific components if needed */
+.allow-color, .allow-color * { filter: none !important; color: initial !important; background: initial !important; }
+
