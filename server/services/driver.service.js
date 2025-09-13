@@ -1,7 +1,7 @@
-const driverModel = require('../models/driver.model');
-const userModel = require('../models/user.model');
+import driverModel from '../models/driver.model.js';
+import userModel from '../models/user.model.js';
 
-module.exports.createDriver = async ({ userId, licenseNumber }) => {
+export const createDriver = async ({ userId, licenseNumber }) => {
     if (!userId || !licenseNumber) {
         throw new Error('User ID and license number are required');
     }
@@ -29,7 +29,7 @@ module.exports.createDriver = async ({ userId, licenseNumber }) => {
     return await driver.populate('userId', 'fullname email phone');
 };
 
-module.exports.getAllDrivers = async (filters = {}) => {
+export const getAllDrivers = async (filters = {}) => {
     const query = {};
     
     if (filters.status) {
@@ -43,7 +43,7 @@ module.exports.getAllDrivers = async (filters = {}) => {
     return drivers;
 };
 
-module.exports.getDriverById = async (driverId) => {
+export const getDriverById = async (driverId) => {
     const driver = await driverModel.findById(driverId)
         .populate('userId', 'fullname email phone')
         .populate('currentCarId', 'model licensePlate');
@@ -55,7 +55,7 @@ module.exports.getDriverById = async (driverId) => {
     return driver;
 };
 
-module.exports.updateDriver = async (driverId, updateData) => {
+export const updateDriver = async (driverId, updateData) => {
     const driver = await driverModel.findByIdAndUpdate(
         driverId,
         updateData,
@@ -70,7 +70,7 @@ module.exports.updateDriver = async (driverId, updateData) => {
     return driver;
 };
 
-module.exports.deleteDriver = async (driverId) => {
+export const deleteDriver = async (driverId) => {
     const driver = await driverModel.findByIdAndUpdate(
         driverId,
         { status: 'OFFLINE' },

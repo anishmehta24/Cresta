@@ -1,10 +1,10 @@
-const userModel = require('../models/user.model');
-const carModel = require('../models/car.model');
-const driverModel = require('../models/driver.model');
-const bookingModel = require('../models/booking.model');
-const paymentModel = require('../models/payment.model');
+import userModel from '../models/user.model.js';
+import carModel from '../models/car.model.js';
+import driverModel from '../models/driver.model.js';
+import bookingModel from '../models/booking.model.js';
+import paymentModel from '../models/payment.model.js';
 
-module.exports.getDashboardOverview = async () => {
+export const getDashboardOverview = async () => {
     const [
         totalUsers,
         totalCars,

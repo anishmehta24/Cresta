@@ -1,7 +1,6 @@
-const userModel = require('../models/user.model');
+import userModel from '../models/user.model.js';
 
-
-module.exports.createUser = async ({firstname, lastname, email, phone, password}) => {
+export const createUser = async ({firstname, lastname, email, phone, password}) => {
     if(!firstname || !email || !phone || !password) {
         throw new Error('All fields are required');
     }
@@ -15,9 +14,9 @@ module.exports.createUser = async ({firstname, lastname, email, phone, password}
         password
     });
     return user;
-}
+};
 
-module.exports.getUserById = async (userId) => {
+export const getUserById = async (userId) => {
     const user = await userModel.findById(userId).select('-password');
     if (!user) {
         throw new Error('User not found');
@@ -25,7 +24,7 @@ module.exports.getUserById = async (userId) => {
     return user;
 };
 
-module.exports.updateUser = async (userId, updateData) => {
+export const updateUser = async (userId, updateData) => {
     // Remove sensitive fields that shouldn't be updated via this method
     const { password, role, ...allowedUpdates } = updateData;
     
@@ -42,7 +41,7 @@ module.exports.updateUser = async (userId, updateData) => {
     return user;
 };
 
-module.exports.deleteUser = async (userId) => {
+export const deleteUser = async (userId) => {
     const user = await userModel.findById(userId);
     if (!user) {
         throw new Error('User not found');
@@ -62,7 +61,7 @@ module.exports.deleteUser = async (userId) => {
     return updatedUser;
 };
 
-module.exports.getAllUsers = async (filters = {}) => {
+export const getAllUsers = async (filters = {}) => {
     const query = {};
     
     if (filters.role) {

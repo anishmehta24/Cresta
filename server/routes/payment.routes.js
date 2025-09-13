@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
+import * as paymentController from '../controllers/payment.controller.js';
+import { authUser, authAdmin } from '../middleware/auth.middleware.js';
+import { body } from 'express-validator';
 const router = express.Router();
-const paymentController = require('../controllers/payment.controller');
-const { authUser, authAdmin } = require('../middleware/auth.middleware');
-const { body } = require('express-validator');
 
 // Create a payment
 router.post('/', authUser, [
@@ -22,4 +22,4 @@ router.put('/:id/status', authUser, authAdmin, [
     body('status').isIn(['PENDING', 'PAID', 'FAILED']).withMessage('Invalid payment status'),
 ], paymentController.updatePaymentStatus);
 
-module.exports = router;
+export default router;

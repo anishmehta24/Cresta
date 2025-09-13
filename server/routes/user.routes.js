@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const userController = require('../controllers/user.controller');
-const { authUser, authAdmin } = require('../middleware/auth.middleware');
+import express from 'express';
+import * as userController from '../controllers/user.controller.js';
+import { authUser, authAdmin } from '../middleware/auth.middleware.js';
+import { body } from 'express-validator';
 
-const {body} = require('express-validator');
+const router = express.Router();
 
 router.post('/register', [
     body('email').isEmail().withMessage('Please enter a valid email address'),
@@ -27,4 +27,4 @@ router.put('/:id', authUser, [
 
 router.delete('/:id', authUser, userController.deleteUser);
 
-module.exports = router;
+export default router;

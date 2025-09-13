@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
 const rideTrackingSchema = new mongoose.Schema({
     bookingId: {
@@ -30,5 +30,5 @@ const rideTrackingSchema = new mongoose.Schema({
     ]
 });
 
-const RideTracking = mongoose.model("RideTracking", rideTrackingSchema);
-module.exports = RideTracking;
+const RideTracking = mongoose.model('RideTracking', rideTrackingSchema);
+export default RideTracking;

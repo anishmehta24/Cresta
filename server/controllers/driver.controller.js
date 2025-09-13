@@ -1,7 +1,7 @@
-const driverService = require('../services/driver.service');
-const { validationResult } = require('express-validator');
+import * as driverService from '../services/driver.service.js';
+import { validationResult } from 'express-validator';
 
-module.exports.createDriver = async (req, res, next) => {
+export const createDriver = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -15,7 +15,7 @@ module.exports.createDriver = async (req, res, next) => {
     }
 };
 
-module.exports.getAllDrivers = async (req, res, next) => {
+export const getAllDrivers = async (req, res, next) => {
     try {
         const filters = {
             status: req.query.status
@@ -28,7 +28,7 @@ module.exports.getAllDrivers = async (req, res, next) => {
     }
 };
 
-module.exports.getDriverById = async (req, res, next) => {
+export const getDriverById = async (req, res, next) => {
     try {
         const driverId = req.params.id;
         const driver = await driverService.getDriverById(driverId);
@@ -38,7 +38,7 @@ module.exports.getDriverById = async (req, res, next) => {
     }
 };
 
-module.exports.updateDriver = async (req, res, next) => {
+export const updateDriver = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -53,7 +53,7 @@ module.exports.updateDriver = async (req, res, next) => {
     }
 };
 
-module.exports.deleteDriver = async (req, res, next) => {
+export const deleteDriver = async (req, res, next) => {
     try {
         const driverId = req.params.id;
         const driver = await driverService.deleteDriver(driverId);

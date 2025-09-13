@@ -1,8 +1,8 @@
-const jwt = require('jsonwebtoken');
-const userModel = require('../models/user.model');
+import jwt from 'jsonwebtoken';
+import userModel from '../models/user.model.js';
 
 // Authentication middleware
-module.exports.authUser = async (req, res, next) => {
+export const authUser = async (req, res, next) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
         
@@ -25,7 +25,7 @@ module.exports.authUser = async (req, res, next) => {
 };
 
 // Admin authorization middleware
-module.exports.authAdmin = async (req, res, next) => {
+export const authAdmin = async (req, res, next) => {
     try {
         if (req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
@@ -37,7 +37,7 @@ module.exports.authAdmin = async (req, res, next) => {
 };
 
 // Driver authorization middleware
-module.exports.authDriver = async (req, res, next) => {
+export const authDriver = async (req, res, next) => {
     try {
         if (req.user.role !== 'driver' && req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Access denied. Driver privileges required.' });

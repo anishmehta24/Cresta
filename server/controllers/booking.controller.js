@@ -1,7 +1,7 @@
-const bookingService = require('../services/booking.service');
-const { validationResult } = require('express-validator');
+import * as bookingService from '../services/booking.service.js';
+import { validationResult } from 'express-validator';
 
-module.exports.createBooking = async (req, res, next) => {
+export const createBooking = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -20,7 +20,7 @@ module.exports.createBooking = async (req, res, next) => {
     }
 };
 
-module.exports.getBookingById = async (req, res, next) => {
+export const getBookingById = async (req, res, next) => {
     try {
         const bookingId = req.params.id;
         const booking = await bookingService.getBookingById(bookingId);
@@ -38,7 +38,7 @@ module.exports.getBookingById = async (req, res, next) => {
     }
 };
 
-module.exports.getUserBookings = async (req, res, next) => {
+export const getUserBookings = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         const bookingType = req.query.type; // 'RIDE' or 'RENTAL'
@@ -55,7 +55,7 @@ module.exports.getUserBookings = async (req, res, next) => {
     }
 };
 
-module.exports.updateBookingStatus = async (req, res, next) => {
+export const updateBookingStatus = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -73,7 +73,7 @@ module.exports.updateBookingStatus = async (req, res, next) => {
 };
 
 // Separate controllers for rides and rentals for cleaner routes
-module.exports.createRide = async (req, res, next) => {
+export const createRide = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -93,7 +93,7 @@ module.exports.createRide = async (req, res, next) => {
     }
 };
 
-module.exports.createRental = async (req, res, next) => {
+export const createRental = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -113,7 +113,7 @@ module.exports.createRental = async (req, res, next) => {
     }
 };
 
-module.exports.getUserRides = async (req, res, next) => {
+export const getUserRides = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         
@@ -129,7 +129,7 @@ module.exports.getUserRides = async (req, res, next) => {
     }
 };
 
-module.exports.getUserRentals = async (req, res, next) => {
+export const getUserRentals = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         

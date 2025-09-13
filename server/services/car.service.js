@@ -1,6 +1,6 @@
-const carModel = require('../models/car.model');
+import carModel from '../models/car.model.js';
 
-module.exports.createCar = async ({ model, licensePlate, capacity, pricePerKm, pricePerDay }) => {
+export const createCar = async ({ model, licensePlate, capacity, pricePerKm, pricePerDay }) => {
     if (!model || !licensePlate || !capacity) {
         throw new Error('Model, license plate, and capacity are required');
     }
@@ -21,7 +21,7 @@ module.exports.createCar = async ({ model, licensePlate, capacity, pricePerKm, p
     return car;
 };
 
-module.exports.getAllCars = async (filters = {}) => {
+export const getAllCars = async (filters = {}) => {
     const query = {};
     
     if (filters.status) {
@@ -36,7 +36,7 @@ module.exports.getAllCars = async (filters = {}) => {
     return cars;
 };
 
-module.exports.getCarById = async (carId) => {
+export const getCarById = async (carId) => {
     const car = await carModel.findById(carId);
     if (!car) {
         throw new Error('Car not found');
@@ -44,7 +44,7 @@ module.exports.getCarById = async (carId) => {
     return car;
 };
 
-module.exports.updateCar = async (carId, updateData) => {
+export const updateCar = async (carId, updateData) => {
     const car = await carModel.findByIdAndUpdate(
         carId,
         updateData,
@@ -58,7 +58,7 @@ module.exports.updateCar = async (carId, updateData) => {
     return car;
 };
 
-module.exports.deleteCar = async (carId) => {
+export const deleteCar = async (carId) => {
     const car = await carModel.findByIdAndUpdate(
         carId,
         { status: 'MAINTENANCE' },

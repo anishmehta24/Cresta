@@ -1,19 +1,24 @@
 # Driving App Server API Documentation
 
-This is the backend API for the Driving App, built with Node.js and Express. The app provides ride booking and car rental services for a private company.
+Backend API for the Driving App (Node.js + Express + MongoDB). Provides user management, ride booking, car rentals, payments, drivers, cars, and admin dashboard statistics.
 
 ## Table of Contents
 - [Getting Started](#getting-started)
-- [Authentication](#authentication)
-- [API Endpoints](#api-endpoints)
-  - [User Management](#user-management)
-  - [Car Management](#car-management)
-  - [Driver Management](#driver-management)
-  - [Ride Booking](#ride-booking)
-  - [Car Rentals](#car-rentals)
+- [Environment Variables](#environment-variables)
+- [Authentication & Roles](#authentication--roles)
+- [Validation](#validation)
+- [API Conventions](#api-conventions)
+- [Resources](#api-endpoints)
+  - [Users](#user-management)
+  - [Cars](#car-management)
+  - [Drivers](#driver-management)
+  - [Rides](#ride-booking)
+  - [Rentals](#car-rentals)
   - [Payments](#payments)
   - [Dashboard](#dashboard)
 - [Error Handling](#error-handling)
+- [Project Structure](#project-structure)
+- [License](#license)
 
 ## Getting Started
 
@@ -27,30 +32,47 @@ This is the backend API for the Driving App, built with Node.js and Express. The
 ```bash
 npm install
 ```
-
-2. Set up environment variables in `.env` file:
-```
-JWT_SECRET=your_jwt_secret_key
-MONGODB_URI=your_mongodb_connection_string
-PORT=3000
-```
-
+2. Create `.env` (see below)
 3. Start the server:
 ```bash
 npm start
 ```
 
-## Authentication
-
-The API uses JSON Web Tokens (JWT) for authentication. Include the token in the Authorization header:
+## Environment Variables
+Required `.env` keys:
 ```
-Authorization: Bearer <your_jwt_token>
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/driving_app
+JWT_SECRET=replace_with_strong_secret
+```
+Optional: add any logging / feature flags as needed.
+
+## Authentication & Roles
+
+JWT-based authentication. Supply the token in every protected request:
+```
+Authorization: Bearer <token>
 ```
 
-### Roles
-- **user**: Regular users who can book rides and rent cars
-- **driver**: Drivers who can manage ride bookings
-- **admin**: Full access to all resources
+Roles:
+- `user`: Can manage own profile, create rides/rentals, view their bookings & payments.
+- `driver`: (Assumed mapped from a user with an associated driver record) Can update ride statuses where assigned (middleware `authDriver`).
+- `admin`: Full administrative actions (create/update/delete cars, drivers, manage statuses, dashboard overview, payment status, etc.).
+
+Middleware used in routes:
+- `authUser`: Requires a valid token.
+- `authAdmin`: Requires authenticated user to have admin privileges; placed after `authUser`.
+- `authDriver`: Allows ride status changes for drivers (or admin). Usually combined with `authUser` before it.
+
+## Validation
+Input validation implemented with `express-validator`. Validation errors respond with HTTP 400 and an `errors` array. See specific field rules per endpoint below.
+
+## API Conventions
+- Base URL prefix: `http://localhost:3000/api`
+- All IDs are MongoDB ObjectIds.
+- Timestamps are ISO8601 strings (UTC) unless stated otherwise.
+- Soft deletes: resources may have status/state changed instead of being physically removed.
+- Status enumerations are strictly validated; invalid values return 400.
 
 ---
 
@@ -64,6 +86,31 @@ http://localhost:3000/api
 ---
 
 ## User Management
+
+Base Path: `/api/users`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | /register | Public | Create user & return JWT |
+| POST | /login | Public | Authenticate & return JWT |
+| GET | /:id | User/Admin | Get user profile (self or admin) |
+| PUT | /:id | User/Admin | Update profile (self or admin) |
+| DELETE | /:id | User/Admin | Soft delete user (self or admin) |
+
+### Validation (Register)
+| Field | Rules |
+|-------|-------|
+| email | valid email, required |
+| fullname.firstname | min length 2, required |
+| fullname.lastname | optional |
+| password | min length 6, required |
+| phone | min length 10, required |
+
+### Validation (Login)
+| Field | Rules |
+|-------|-------|
+| email | valid email, required |
+| password | min length 6, required |
 
 ### POST `/api/users/register`
 Creates a new user account.
@@ -146,6 +193,32 @@ Soft delete user account. Users can only delete their own account unless they're
 
 ## Car Management
 
+Base Path: `/api/cars`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | / | Admin | Create car |
+| GET | / | User | List cars (filterable) |
+| GET | /:id | User | Get car by id |
+| PUT | /:id | Admin | Update car |
+| DELETE | /:id | Admin | Soft delete (set status MAINTENANCE) |
+
+### Query Filters (GET /api/cars)
+| Param | Description |
+|-------|-------------|
+| status | AVAILABLE, ON_RIDE, RENTED, MAINTENANCE |
+| capacity | Minimum capacity (integer) |
+
+### Validation (Create / Update)
+| Field | Rules |
+|-------|-------|
+| model | required (create) / optional non-empty (update) |
+| licensePlate | required (create) / optional non-empty (update) |
+| capacity | int >=1 |
+| pricePerKm | optional float >=0 |
+| pricePerDay | optional float >=0 |
+| status (update) | one of AVAILABLE, ON_RIDE, RENTED, MAINTENANCE |
+
 ### POST `/api/cars`
 Add a new car. **Admin only**.
 
@@ -206,6 +279,24 @@ Soft delete a car (marks as MAINTENANCE). **Admin only**.
 
 ## Driver Management
 
+Base Path: `/api/drivers`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | / | Admin | Create driver (attach to existing user) |
+| GET | / | User | List drivers |
+| GET | /:id | User | Get driver by id |
+| PUT | /:id | Admin | Update driver (license/status/currentCarId) |
+| DELETE | /:id | Admin | Soft delete (set OFFLINE) |
+
+### Validation (Create / Update)
+| Field | Rules |
+|-------|-------|
+| userId (create) | MongoId required |
+| licenseNumber | required (create) / optional non-empty (update) |
+| status (update) | AVAILABLE, ON_RIDE, OFFLINE |
+| currentCarId (update) | optional MongoId |
+
 ### POST `/api/drivers`
 Add a new driver. **Admin only**.
 
@@ -242,6 +333,31 @@ Soft delete driver (marks as OFFLINE). **Admin only**.
 ---
 
 ## Ride Booking
+
+Base Path: `/api/rides`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | / | User | Create ride booking |
+| GET | /:id | User | Get ride booking by id |
+| GET | /user/:userId | User/Admin | List rides for a user |
+| PUT | /:id/status | Driver/Admin | Update ride booking status |
+
+### Validation (Create Ride)
+| Field | Rules |
+|-------|-------|
+| startTime | ISO8601 required |
+| pickupLocation.address | required |
+| pickupLocation.coordinates | array length 2 [lng, lat] |
+| dropoffLocation.address | required |
+| dropoffLocation.coordinates | array length 2 [lng, lat] |
+| cars | array min 1 |
+| cars[].carId | MongoId required |
+
+### Validation (Status Update)
+| Field | Rules |
+|-------|-------|
+| status | PENDING, CONFIRMED, ONGOING, COMPLETED, CANCELLED |
 
 ### POST `/api/rides`
 Create a new ride booking.
@@ -289,6 +405,30 @@ Update ride status. **Driver or Admin only**.
 
 ## Car Rentals
 
+Base Path: `/api/rentals`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | / | User | Create rental booking |
+| GET | /:id | User | Get rental by id |
+| GET | /user/:userId | User/Admin | List rentals for a user |
+| PUT | /:id/status | Admin | Update rental status |
+
+### Validation (Create Rental)
+| Field | Rules |
+|-------|-------|
+| startTime | ISO8601 required |
+| endTime | ISO8601 required |
+| pickupLocation.address | required |
+| pickupLocation.coordinates | array length 2 [lng, lat] |
+| cars | array min 1 |
+| cars[].carId | MongoId required |
+
+### Validation (Status Update)
+| Field | Rules |
+|-------|-------|
+| status | PENDING, CONFIRMED, ONGOING, COMPLETED, CANCELLED |
+
 ### POST `/api/rentals`
 Create a new rental booking (multiple cars possible).
 
@@ -333,6 +473,27 @@ Update rental status. **Admin only**.
 
 ## Payments
 
+Base Path: `/api/payments`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | / | User | Create payment for booking (ride or rental) |
+| GET | /:id | User | Get payment by id |
+| GET | /user/:userId | User/Admin | List payments for a user |
+| PUT | /:id/status | Admin | Update payment status |
+
+### Validation (Create Payment)
+| Field | Rules |
+|-------|-------|
+| bookingId | MongoId required |
+| amount | float >=0 |
+| method | CASH, CARD, WALLET, UPI |
+
+### Validation (Status Update)
+| Field | Rules |
+|-------|-------|
+| status | PENDING, PAID, FAILED |
+
 ### POST `/api/payments`
 Create a payment for a ride or rental.
 
@@ -369,6 +530,12 @@ Update payment status. **Admin only**.
 ---
 
 ## Dashboard
+
+Base Path: `/api/dashboard`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | /overview | Admin | Aggregate stats overview |
 
 ### GET `/api/dashboard/overview`
 Get summary statistics. **Admin only**.
@@ -452,202 +619,4 @@ server/
 
 ## License
 
-This project is licensed under the MIT License.
-
-## Getting Started
-
-### Prerequisites
-- Node.js
-- MongoDB
-- npm or yarn
-
-### Installation
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Set up environment variables in `.env` file
-
-3. Start the server:
-```bash
-npm start
-```
-
-## API Endpoints
-
-### Base URL
-```
-http://localhost:3000/api
-```
-
----
-
-## User Registration
-
-### POST `/api/users/register`
-
-Creates a new user account.
-
-#### Description
-This endpoint allows new users to register for the driving app. It validates the user input, hashes the password, checks for existing users, and creates a new user account.
-
-#### Request Body
-```json
-{
-  "fullname": {
-    "firstname": "string",
-    "lastname": "string"
-  },
-  "email": "string",
-  "phone": "string",
-  "password": "string"
-}
-```
-
-#### Request Body Validation
-- `email`: Must be a valid email address
-- `fullname.firstname`: Must be at least 2 characters long
-- `password`: Must be at least 6 characters long
-- `phone`: Required field
-- `fullname.lastname`: Optional field
-
-#### Example Request
-```json
-{
-  "fullname": {
-    "firstname": "John",
-    "lastname": "Doe"
-  },
-  "email": "john.doe@example.com",
-  "phone": "+1234567890",
-  "password": "securepassword123"
-}
-```
-
-#### Success Response (201 Created)
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "60d5ec49f1a2c8b1f8e4e1a1",
-    "fullname": {
-      "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com",
-    "phone": "+1234567890",
-    "createdAt": "2023-06-25T10:30:00.000Z",
-    "updatedAt": "2023-06-25T10:30:00.000Z"
-  }
-}
-```
-
-
----
-
-## User Login
-
-### POST `/api/users/login`
-
-Authenticates an existing user.
-
-#### Description
-This endpoint allows existing users to log in to the driving app. It validates the credentials and returns a JWT token for authentication.
-
-#### Request Body
-```json
-{
-  "email": "string",
-  "password": "string"
-}
-```
-
-#### Request Body Validation
-- `email`: Must be a valid email address
-- `password`: Must be at least 6 characters long
-
-#### Example Request
-```json
-{
-  "email": "john.doe@example.com",
-  "password": "securepassword123"
-}
-```
-
-#### Success Response (200 OK)
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "60d5ec49f1a2c8b1f8e4e1a1",
-    "fullname": {
-      "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com",
-    "phone": "+1234567890",
-    "createdAt": "2023-06-25T10:30:00.000Z",
-    "updatedAt": "2023-06-25T10:30:00.000Z"
-  }
-}
-```
-
-
----
-
-## Error Handling
-
-The API uses standard HTTP status codes to indicate the success or failure of requests:
-
-- **200 OK**: The request was successful
-- **201 Created**: The resource was created successfully
-- **400 Bad Request**: The request was invalid or cannot be served
-- **401 Unauthorized**: Authentication is required
-- **404 Not Found**: The requested resource was not found
-- **500 Internal Server Error**: The server encountered an unexpected condition
-
-### Error Response Format
-
-All error responses follow a consistent format:
-
-```json
-{
-  "error": "Error message description"
-}
-```
-
-For validation errors:
-```json
-{
-  "errors": [
-    {
-      "msg": "Error message",
-      "param": "field_name",
-      "location": "body"
-    }
-  ]
-}
-```
-
----
-
-## Authentication
-
-The API uses JSON Web Tokens (JWT) for authentication. After successful login or registration, you'll receive a token that should be included in subsequent requests.
-
-### Using the Token
-
-Include the token in the Authorization header:
-```
-Authorization: Bearer <your_jwt_token>
-```
-
----
-
-
----
-
-## License
-
-This project is licensed under the MIT License.
+MIT License.

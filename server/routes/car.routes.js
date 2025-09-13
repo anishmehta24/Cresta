@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
+import * as carController from '../controllers/car.controller.js';
+import { authUser, authAdmin } from '../middleware/auth.middleware.js';
+import { body } from 'express-validator';
 const router = express.Router();
-const carController = require('../controllers/car.controller');
-const { authUser, authAdmin } = require('../middleware/auth.middleware');
-const { body } = require('express-validator');
 
 // Create a new car (admin only)
 router.post('/', authUser, authAdmin, [
@@ -32,4 +32,4 @@ router.put('/:id', authUser, authAdmin, [
 // Soft delete a car (admin only)
 router.delete('/:id', authUser, authAdmin, carController.deleteCar);
 
-module.exports = router;
+export default router;

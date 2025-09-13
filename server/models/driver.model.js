@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
 const driverSchema = new mongoose.Schema({
     userId: {
@@ -27,5 +27,5 @@ const driverSchema = new mongoose.Schema({
     }
 });
 
-const Driver = mongoose.model("Driver", driverSchema);
-module.exports = Driver;
+const Driver = mongoose.model('Driver', driverSchema);
+export default Driver;

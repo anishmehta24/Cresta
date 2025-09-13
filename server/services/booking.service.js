@@ -1,8 +1,8 @@
-const bookingModel = require('../models/booking.model');
-const carModel = require('../models/car.model');
-const driverModel = require('../models/driver.model');
+import bookingModel from '../models/booking.model.js';
+import carModel from '../models/car.model.js';
+import driverModel from '../models/driver.model.js';
 
-module.exports.createBooking = async (bookingData) => {
+export const createBooking = async (bookingData) => {
     const { userId, bookingType, startTime, pickupLocation, dropoffLocation, cars } = bookingData;
 
     if (!userId || !bookingType || !startTime || !cars || cars.length === 0) {
@@ -90,7 +90,7 @@ module.exports.createBooking = async (bookingData) => {
     ]);
 };
 
-module.exports.getBookingById = async (bookingId) => {
+export const getBookingById = async (bookingId) => {
     const booking = await bookingModel.findById(bookingId)
         .populate('userId', 'fullname email phone')
         .populate('cars.carId', 'model licensePlate capacity')
@@ -107,7 +107,7 @@ module.exports.getBookingById = async (bookingId) => {
     return booking;
 };
 
-module.exports.getUserBookings = async (userId, bookingType = null) => {
+export const getUserBookings = async (userId, bookingType = null) => {
     const query = { userId };
     if (bookingType) {
         query.bookingType = bookingType;
@@ -125,7 +125,7 @@ module.exports.getUserBookings = async (userId, bookingType = null) => {
     return bookings;
 };
 
-module.exports.updateBookingStatus = async (bookingId, status) => {
+export const updateBookingStatus = async (bookingId, status) => {
     const booking = await bookingModel.findById(bookingId);
     if (!booking) {
         throw new Error('Booking not found');

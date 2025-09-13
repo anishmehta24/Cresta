@@ -1,19 +1,20 @@
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 dotenv.config();
-const express = require('express');
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
 
-// Import all routes
-const userRoutes = require('./routes/user.routes');
-const carRoutes = require('./routes/car.routes');
-const driverRoutes = require('./routes/driver.routes');
-const rideRoutes = require('./routes/ride.routes');
-const rentalRoutes = require('./routes/rental.routes');
-const paymentRoutes = require('./routes/payment.routes');
-const dashboardRoutes = require('./routes/dashboard.routes');
+// Import all routes (explicit .js extensions for ESM)
+import userRoutes from './routes/user.routes.js';
+import carRoutes from './routes/car.routes.js';
+import driverRoutes from './routes/driver.routes.js';
+import rideRoutes from './routes/ride.routes.js';
+import rentalRoutes from './routes/rental.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
+
+import connectDB from './db/db.js';
 
 const app = express();
-const connectDB = require('./db/db');
 
 connectDB();
 
@@ -34,5 +35,5 @@ app.use('/api/rentals', rentalRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-module.exports = app;
+export default app;
 

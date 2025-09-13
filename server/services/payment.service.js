@@ -1,7 +1,7 @@
-const paymentModel = require('../models/payment.model');
-const bookingModel = require('../models/booking.model');
+import paymentModel from '../models/payment.model.js';
+import bookingModel from '../models/booking.model.js';
 
-module.exports.createPayment = async ({ bookingId, amount, method }) => {
+export const createPayment = async ({ bookingId, amount, method }) => {
     if (!bookingId || !amount || !method) {
         throw new Error('Booking ID, amount, and payment method are required');
     }
@@ -27,7 +27,7 @@ module.exports.createPayment = async ({ bookingId, amount, method }) => {
     return await payment.populate('bookingId', 'userId bookingType totalAmount');
 };
 
-module.exports.getPaymentById = async (paymentId) => {
+export const getPaymentById = async (paymentId) => {
     const payment = await paymentModel.findById(paymentId)
         .populate({
             path: 'bookingId',
@@ -42,7 +42,7 @@ module.exports.getPaymentById = async (paymentId) => {
     return payment;
 };
 
-module.exports.getUserPayments = async (userId) => {
+export const getUserPayments = async (userId) => {
     const payments = await paymentModel.find()
         .populate({
             path: 'bookingId',
@@ -55,7 +55,7 @@ module.exports.getUserPayments = async (userId) => {
     return payments.filter(payment => payment.bookingId);
 };
 
-module.exports.updatePaymentStatus = async (paymentId, status) => {
+export const updatePaymentStatus = async (paymentId, status) => {
     const payment = await paymentModel.findById(paymentId);
     if (!payment) {
         throw new Error('Payment not found');

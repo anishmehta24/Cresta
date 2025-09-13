@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
+import * as bookingController from '../controllers/booking.controller.js';
+import { authUser, authAdmin } from '../middleware/auth.middleware.js';
+import { body } from 'express-validator';
 const router = express.Router();
-const bookingController = require('../controllers/booking.controller');
-const { authUser, authAdmin } = require('../middleware/auth.middleware');
-const { body } = require('express-validator');
 
 // Create a new rental booking
 router.post('/', authUser, [
@@ -25,4 +25,4 @@ router.put('/:id/status', authUser, authAdmin, [
     body('status').isIn(['PENDING', 'CONFIRMED', 'ONGOING', 'COMPLETED', 'CANCELLED']).withMessage('Invalid status'),
 ], bookingController.updateBookingStatus);
 
-module.exports = router;
+export default router;

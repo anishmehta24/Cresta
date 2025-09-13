@@ -1,8 +1,8 @@
-const userModel = require('../models/user.model');
-const userService = require('../services/user.service');
-const { validationResult } = require('express-validator');
+import userModel from '../models/user.model.js';
+import * as userService from '../services/user.service.js';
+import { validationResult } from 'express-validator';
 
-module.exports.registerUser = async (req, res, next) => {
+export const registerUser = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if(!errors.isEmpty()) {
@@ -37,7 +37,7 @@ module.exports.registerUser = async (req, res, next) => {
     }
 };
 
-module.exports.loginUser = async (req, res, next) => {
+export const loginUser = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if(!errors.isEmpty()) {
@@ -73,7 +73,7 @@ module.exports.loginUser = async (req, res, next) => {
     }
 };
 
-module.exports.getUserProfile = async (req, res, next) => {
+export const getUserProfile = async (req, res, next) => {
     try {
         const userId = req.params.id;
         
@@ -89,7 +89,7 @@ module.exports.getUserProfile = async (req, res, next) => {
     }
 };
 
-module.exports.updateUserProfile = async (req, res, next) => {
+export const updateUserProfile = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if(!errors.isEmpty()) {
@@ -110,7 +110,7 @@ module.exports.updateUserProfile = async (req, res, next) => {
     }
 };
 
-module.exports.deleteUser = async (req, res, next) => {
+export const deleteUser = async (req, res, next) => {
     try {
         const userId = req.params.id;
         

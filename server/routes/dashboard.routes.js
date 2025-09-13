@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
+import * as dashboardController from '../controllers/dashboard.controller.js';
+import { authUser, authAdmin } from '../middleware/auth.middleware.js';
 const router = express.Router();
-const dashboardController = require('../controllers/dashboard.controller');
-const { authUser, authAdmin } = require('../middleware/auth.middleware');
 
 // Get dashboard overview (admin only)
 router.get('/overview', authUser, authAdmin, dashboardController.getDashboardOverview);
 
-module.exports = router;
+export default router;

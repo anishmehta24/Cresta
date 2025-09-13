@@ -1,7 +1,7 @@
-const carService = require('../services/car.service');
-const { validationResult } = require('express-validator');
+import * as carService from '../services/car.service.js';
+import { validationResult } from 'express-validator';
 
-module.exports.createCar = async (req, res, next) => {
+export const createCar = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -15,7 +15,7 @@ module.exports.createCar = async (req, res, next) => {
     }
 };
 
-module.exports.getAllCars = async (req, res, next) => {
+export const getAllCars = async (req, res, next) => {
     try {
         const filters = {
             status: req.query.status,
@@ -29,7 +29,7 @@ module.exports.getAllCars = async (req, res, next) => {
     }
 };
 
-module.exports.getCarById = async (req, res, next) => {
+export const getCarById = async (req, res, next) => {
     try {
         const carId = req.params.id;
         const car = await carService.getCarById(carId);
@@ -39,7 +39,7 @@ module.exports.getCarById = async (req, res, next) => {
     }
 };
 
-module.exports.updateCar = async (req, res, next) => {
+export const updateCar = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -54,7 +54,7 @@ module.exports.updateCar = async (req, res, next) => {
     }
 };
 
-module.exports.deleteCar = async (req, res, next) => {
+export const deleteCar = async (req, res, next) => {
     try {
         const carId = req.params.id;
         const car = await carService.deleteCar(carId);

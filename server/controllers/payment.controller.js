@@ -1,7 +1,7 @@
-const paymentService = require('../services/payment.service');
-const { validationResult } = require('express-validator');
+import * as paymentService from '../services/payment.service.js';
+import { validationResult } from 'express-validator';
 
-module.exports.createPayment = async (req, res, next) => {
+export const createPayment = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -15,7 +15,7 @@ module.exports.createPayment = async (req, res, next) => {
     }
 };
 
-module.exports.getPaymentById = async (req, res, next) => {
+export const getPaymentById = async (req, res, next) => {
     try {
         const paymentId = req.params.id;
         const payment = await paymentService.getPaymentById(paymentId);
@@ -32,7 +32,7 @@ module.exports.getPaymentById = async (req, res, next) => {
     }
 };
 
-module.exports.getUserPayments = async (req, res, next) => {
+export const getUserPayments = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         
@@ -48,7 +48,7 @@ module.exports.getUserPayments = async (req, res, next) => {
     }
 };
 
-module.exports.updatePaymentStatus = async (req, res, next) => {
+export const updatePaymentStatus = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
