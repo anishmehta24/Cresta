@@ -1,6 +1,7 @@
 import * as bookingService from '../services/booking.service.js';
 import { validationResult } from 'express-validator';
 
+// Create booking (general)
 export const createBooking = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -20,15 +21,17 @@ export const createBooking = async (req, res, next) => {
     }
 };
 
+// Get booking by ID
 export const getBookingById = async (req, res, next) => {
     try {
         const bookingId = req.params.id;
         const booking = await bookingService.getBookingById(bookingId);
         
-        // Users can only access their own bookings unless they're admin or driver
-        if (req.user.role !== 'admin' && 
+        if (
+            req.user.role !== 'admin' && 
             req.user.role !== 'driver' && 
-            booking.userId._id.toString() !== req.user._id.toString()) {
+            booking.userId._id.toString() !== req.user._id.toString()
+        ) {
             return res.status(403).json({ error: 'Access denied' });
         }
 
@@ -38,12 +41,12 @@ export const getBookingById = async (req, res, next) => {
     }
 };
 
+// Get all bookings for a user
 export const getUserBookings = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         const bookingType = req.query.type; // 'RIDE' or 'RENTAL'
         
-        // Users can only access their own bookings unless they're admin
         if (req.user._id.toString() !== userId && req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Access denied' });
         }
@@ -55,6 +58,7 @@ export const getUserBookings = async (req, res, next) => {
     }
 };
 
+// Update booking status
 export const updateBookingStatus = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -72,7 +76,7 @@ export const updateBookingStatus = async (req, res, next) => {
     }
 };
 
-// Separate controllers for rides and rentals for cleaner routes
+// Create Ride
 export const createRide = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -93,6 +97,7 @@ export const createRide = async (req, res, next) => {
     }
 };
 
+// Create Rental
 export const createRental = async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -113,11 +118,11 @@ export const createRental = async (req, res, next) => {
     }
 };
 
+// Get user rides
 export const getUserRides = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         
-        // Users can only access their own rides unless they're admin
         if (req.user._id.toString() !== userId && req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Access denied' });
         }
@@ -129,11 +134,11 @@ export const getUserRides = async (req, res, next) => {
     }
 };
 
+// Get user rentals
 export const getUserRentals = async (req, res, next) => {
     try {
         const userId = req.params.userId;
         
-        // Users can only access their own rentals unless they're admin
         if (req.user._id.toString() !== userId && req.user.role !== 'admin') {
             return res.status(403).json({ error: 'Access denied' });
         }
@@ -142,5 +147,18 @@ export const getUserRentals = async (req, res, next) => {
         res.status(200).json({ rentals });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};
+
+// Complete Ride (new route)
+export const completeRide = async (req, res, next) => {
+    try {
+        const bookingId = req.params.id;
+
+        const booking = await bookingService.updateBookingStatus(bookingId, 'COMPLETED');
+        
+        res.status(200).json({ message: 'Ride completed successfully', booking });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 };

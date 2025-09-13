@@ -15,11 +15,11 @@ router.post('/', authUser, [
     body('cars.*.carId').isMongoId().withMessage('Valid car ID is required'),
 ], bookingController.createRide);
 
-// Get ride details
-router.get('/:id', authUser, bookingController.getBookingById);
-
 // Get all rides for a user
 router.get('/user/:userId', authUser, bookingController.getUserRides);
+
+// Get ride details
+router.get('/:id', authUser, bookingController.getBookingById);
 
 // Update ride status (admin or driver only)
 router.put('/:id/status', authUser, authDriver, [

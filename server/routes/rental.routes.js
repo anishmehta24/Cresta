@@ -14,11 +14,11 @@ router.post('/', authUser, [
     body('cars.*.carId').isMongoId().withMessage('Valid car ID is required'),
 ], bookingController.createRental);
 
-// Get rental details
-router.get('/:id', authUser, bookingController.getBookingById);
-
 // Get all rentals for a user
 router.get('/user/:userId', authUser, bookingController.getUserRentals);
+
+// Get rental details
+router.get('/:id', authUser, bookingController.getBookingById);
 
 // Update rental status (admin only)
 router.put('/:id/status', authUser, authAdmin, [
