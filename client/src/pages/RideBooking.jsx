@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import bookingService from '../services/bookingService'
+import authService from '../services/authService'
 
 const RideBooking = () => {
   const [formData, setFormData] = useState({
@@ -70,10 +72,21 @@ const RideBooking = () => {
     }))
   }
 
-  const handleBooking = () => {
-    // Handle booking submission
-    console.log('Booking submitted:', formData)
-    alert('Ride booked successfully! A driver will be assigned shortly.')
+  const handleBooking = async () => {
+    try {
+      const user = authService.getCurrentUser()
+      const isoStart = new Date(`${formData.pickupDate}T${formData.pickupTime}:00`).toISOString()
+      const ride = await bookingService.createRide({
+        pickupAddress: formData.pickupLocation,
+        dropoffAddress: formData.dropoffLocation,
+        startTime: isoStart,
+        carIds: [formData.selectedCar]
+      })
+      console.log('Ride created', ride)
+      alert('Ride booked successfully!')
+    } catch (e) {
+      alert(e.message || 'Booking failed')
+    }
   }
 
   return (

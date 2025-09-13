@@ -34,7 +34,7 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path
 
   return (
-    <header className="bg-gray-800 shadow-lg sticky top-0 z-50 border-b border-gray-700">
+    <header className="bg-black/70 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-[var(--mono-border)]">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -46,19 +46,9 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  isActive(item.path)
-                    ? 'text-blue-400 border-b-2 border-blue-400 pb-1'
-                    : 'text-gray-300 hover:text-blue-400'
-                }`}
-              >
-                {item.name}
-              </Link>
+          <div className="hidden md:flex items-center space-x-6">
+            {navItems.map(item => (
+              <Link key={item.name} to={item.path} className={`nav-link ${isActive(item.path) ? 'active' : ''}`}>{item.name}</Link>
             ))}
           </div>
 
@@ -122,25 +112,15 @@ const Navbar = () => {
               </div>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="text-gray-300 hover:text-blue-400 text-sm font-medium transition-colors duration-200"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                >
-                  Sign Up
-                </Link>
+                <Link to="/login" className="nav-link">Sign In</Link>
+                <Link to="/register" className="btn btn-primary text-sm px-5 py-2">Sign Up</Link>
               </>
             )}
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 rounded-md text-gray-300 hover:text-blue-400 hover:bg-gray-700"
+            className="md:hidden p-2 rounded-md nav-link hover:bg-[var(--mono-bg-2)]"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,23 +135,12 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-700 bg-gray-800">
+          <div className="md:hidden py-4 border-t border-[var(--mono-border)] bg-[var(--mono-bg-2)]">
             <div className="flex flex-col space-y-3">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                    isActive(item.path)
-                      ? 'text-blue-400 bg-gray-700 rounded-md'
-                      : 'text-gray-300 hover:text-blue-400 hover:bg-gray-700 rounded-md'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
+              {navItems.map(item => (
+                <Link key={item.name} to={item.path} className={`nav-link ${isActive(item.path)?'active':''}`} onClick={() => setIsMenuOpen(false)}>{item.name}</Link>
               ))}
-              <div className="flex flex-col space-y-2 pt-4 border-t border-gray-700">
+              <div className="flex flex-col space-y-2 pt-4 border-t border-[var(--mono-border)]">
                 {isAuthenticated ? (
                   <>
                     <div className="flex items-center space-x-3 px-3 py-2">
@@ -203,20 +172,8 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Link
-                      to="/login"
-                      className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-blue-400 hover:bg-gray-700 rounded-md"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      to="/register"
-                      className="px-3 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md text-center"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Sign Up
-                    </Link>
+                    <Link to="/login" className="nav-link" onClick={() => setIsMenuOpen(false)}>Sign In</Link>
+                    <Link to="/register" className="btn btn-primary text-sm" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
                   </>
                 )}
               </div>
