@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
 
 const Navbar = () => {
@@ -9,19 +9,28 @@ const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth()
   const profileMenuRef = useRef(null)
 
-  // Close profile menu when clicking outside
+  // Close profile menu when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setIsProfileMenuOpen(false)
       }
     }
-
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setIsProfileMenuOpen(false)
+    }
     document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKey)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKey)
     }
   }, [])
+
+  const toggleProfileMenu = useCallback(() => setIsProfileMenuOpen(o => !o), [])
+
+  const firstName = user?.fullname?.firstname || 'User'
+  const initial = firstName.charAt(0).toUpperCase()
 
   const navItems = [
     { name: 'Home', path: '/' },
@@ -57,56 +66,62 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="relative" ref={profileMenuRef}>
                 <button
-                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className="flex items-center space-x-2 text-gray-300 hover:text-blue-400 focus:outline-none"
+                  onClick={toggleProfileMenu}
+                  aria-haspopup="true"
+                  aria-expanded={isProfileMenuOpen}
+                  className={`group flex items-center gap-2 rounded-full pl-1 pr-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500/60 transition-colors border border-[var(--mono-border)] bg-[var(--mono-bg-2)] hover:bg-[var(--mono-bg-3)]`}
                 >
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">
-                      {user?.fullname?.firstname?.charAt(0)?.toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium">
-                    {user?.fullname?.firstname || 'User'}
+                  <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-500 text-white font-semibold text-sm shadow-inner">
+                    {initial}
+                    <span className="absolute inset-0 rounded-full ring-1 ring-white/10" />
                   </span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <span className="flex items-center gap-1 text-sm font-medium text-gray-200">
+                    <span className="max-w-[90px] truncate">{firstName}</span>
+                    <svg
+                      className={`w-4 h-4 text-gray-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
                 </button>
-
-                {/* Profile Dropdown */}
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-700">
-                    <Link
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    >
-                      View Profile
-                    </Link>
-                    <Link
-                      to="/my-rides"
-                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    >
-                      My Rides
-                    </Link>
-                    <Link
-                      to="/my-rentals"
-                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    >
-                      My Rentals
-                    </Link>
-                    <hr className="my-1 border-gray-700" />
-                    <button
-                      onClick={() => {
-                        logout()
-                        setIsProfileMenuOpen(false)
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
-                    >
-                      Sign Out
-                    </button>
+                  <div
+                    role="menu"
+                    aria-label="User menu"
+                    className="absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-[var(--mono-border)] bg-[var(--mono-bg-2)] shadow-xl shadow-black/50 backdrop-blur-sm focus:outline-none overflow-hidden"
+                  >
+                    <div className="px-4 py-3 border-b border-[var(--mono-border)]">
+                      <p className="text-sm text-gray-400">Signed in as</p>
+                      <p className="text-sm font-semibold text-white truncate">{firstName}</p>
+                    </div>
+                    <div className="py-1" role="none">
+                      <Link
+                        to="/profile"
+                        role="menuitem"
+                        className="block px-4 py-2.5 text-sm text-gray-300 hover:bg-[var(--mono-bg-3)] hover:text-white transition-colors"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                      >Profile</Link>
+                      <Link
+                        to="/my-rides"
+                        role="menuitem"
+                        className="block px-4 py-2.5 text-sm text-gray-300 hover:bg-[var(--mono-bg-3)] hover:text-white transition-colors"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                      >Rides</Link>
+                      <Link
+                        to="/my-rentals"
+                        role="menuitem"
+                        className="block px-4 py-2.5 text-sm text-gray-300 hover:bg-[var(--mono-bg-3)] hover:text-white transition-colors"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                      >Rentals</Link>
+                    </div>
+                    <div className="border-t border-[var(--mono-border)]">
+                      <button
+                        role="menuitem"
+                        onClick={() => { logout(); setIsProfileMenuOpen(false) }}
+                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                      >Sign Out</button>
+                    </div>
                   </div>
                 )}
               </div>

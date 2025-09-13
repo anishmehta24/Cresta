@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import bookingService from '../services/bookingService'
 import authService from '../services/authService'
 
@@ -14,41 +14,9 @@ const RideBooking = () => {
   })
 
   const [showCarSelection, setShowCarSelection] = useState(false)
-
-  const carOptions = [
-    {
-      id: 'economy',
-      name: 'Economy',
-      description: 'Affordable and comfortable',
-      capacity: '4 passengers',
-      price: '$15',
-      estimatedTime: '5 mins'
-    },
-    {
-      id: 'standard',
-      name: 'Standard',
-      description: 'More space and comfort',
-      capacity: '4 passengers',
-      price: '$25',
-      estimatedTime: '3 mins'
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      description: 'Luxury and style',
-      capacity: '4 passengers',
-      price: '$40',
-      estimatedTime: '4 mins'
-    },
-    {
-      id: 'suv',
-      name: 'SUV',
-      description: 'Extra space for groups',
-      capacity: '6 passengers',
-      price: '$35',
-      estimatedTime: '6 mins'
-    }
-  ]
+  const [cars, setCars] = useState([])
+  const [carsLoading, setCarsLoading] = useState(false)
+  const [carsError, setCarsError] = useState(null)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -58,10 +26,21 @@ const RideBooking = () => {
     }))
   }
 
-  const handleLocationSubmit = (e) => {
+  const handleLocationSubmit = async (e) => {
     e.preventDefault()
     if (formData.pickupLocation && formData.dropoffLocation) {
       setShowCarSelection(true)
+      // Fetch available cars when user proceeds
+      setCarsLoading(true)
+      setCarsError(null)
+      try {
+        const data = await bookingService.getCars({ status: 'AVAILABLE' })
+        setCars(Array.isArray(data) ? data : (data.cars || []))
+      } catch (err) {
+        setCarsError(err.message || 'Failed to load cars')
+      } finally {
+        setCarsLoading(false)
+      }
     }
   }
 
@@ -225,41 +204,52 @@ const RideBooking = () => {
               {showCarSelection && (
                 <div className="mt-8 pt-8 border-t border-gray-200">
                   <h3 className="text-xl font-bold text-gray-900 mb-6">Choose Your Ride</h3>
+                  {carsLoading && <div className="text-gray-500 text-sm">Loading available cars...</div>}
+                  {carsError && <div className="text-red-500 text-sm">{carsError}</div>}
+                  {!carsLoading && !carsError && cars.length === 0 && (
+                    <div className="text-gray-500 text-sm">No cars available for the selected time.</div>
+                  )}
                   <div className="space-y-4">
-                    {carOptions.map((car) => (
-                      <div
-                        key={car.id}
-                        onClick={() => handleCarSelect(car.id)}
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                          formData.selectedCar === car.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-4 h-4 rounded-full border-2 ${
-                                formData.selectedCar === car.id
-                                  ? 'border-blue-500 bg-blue-500'
-                                  : 'border-gray-300'
-                              }`}></div>
-                              <div>
-                                <h4 className="font-semibold text-gray-900">{car.name}</h4>
-                                <p className="text-sm text-gray-600">{car.description}</p>
-                                <p className="text-sm text-gray-500">{car.capacity}</p>
+                    {cars.map((car) => {
+                      const capacity = car.capacity ? `${car.capacity} seats` : ''
+                      return (
+                        <div
+                          key={car._id || car.id}
+                          onClick={() => handleCarSelect(car._id || car.id)}
+                          className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                            formData.selectedCar === (car._id || car.id)
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className={`w-4 h-4 rounded-full border-2 ${
+                                  formData.selectedCar === (car._id || car.id)
+                                    ? 'border-blue-500 bg-blue-500'
+                                    : 'border-gray-300'
+                                }`}></div>
+                                <div>
+                                  <h4 className="font-semibold text-gray-900">{car.make ? `${car.make} ${car.model}` : car.name || 'Car'}</h4>
+                                  <p className="text-sm text-gray-600 capitalize">{car.type || car.category || ''}</p>
+                                  <p className="text-sm text-gray-500">{capacity}</p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-gray-900">{car.price}</div>
-                            <div className="text-sm text-gray-500">{car.estimatedTime} away</div>
+                            <div className="text-right">
+                              {car.ratePerKm && (
+                                <div className="text-xs text-gray-500">Rate/km: {car.ratePerKm}</div>
+                              )}
+                              {car.ratePerMin && (
+                                <div className="text-xs text-gray-500">Rate/min: {car.ratePerMin}</div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
-
                   {formData.selectedCar && (
                     <button
                       onClick={handleBooking}

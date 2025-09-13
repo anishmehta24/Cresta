@@ -43,6 +43,16 @@ const bookingService = {
   getCarById: async (id) => {
     const { data } = await apiClient.get(`/cars/${id}`)
     return data.car
+  },
+  // Dashboard stats (assumes backend /dashboard/stats or /dashboard)
+  getDashboardStats: async () => {
+    const { data } = await apiClient.get('/dashboard')
+    return data
+  },
+  // Basic profile fetch (if needed separate from auth context refresh)
+  getUserProfile: async (userId) => {
+    const { data } = await apiClient.get(`/users/${userId}`)
+    return data.user || data
   }
 }
 
