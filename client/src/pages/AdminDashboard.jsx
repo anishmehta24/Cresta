@@ -135,7 +135,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-400 leading-relaxed mb-4">Add, audit and maintain vehicles to ensure availability and quality. Keep pricing current and status accurate for dispatch reliability.</p>
             <div className="flex flex-wrap gap-3">
               <Link to="/admin/cars" className="btn btn-primary text-xs px-4 py-2">Manage Cars</Link>
-              <Link to="/admin/cars" className="btn btn-muted text-xs px-4 py-2">Add New Car</Link>
+              <Link to="/admin/cars/new" className="btn btn-muted text-xs px-4 py-2">Add New Car</Link>
             </div>
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-400 leading-relaxed mb-4">Onboard, validate and monitor driver performance. Maintain compliance and availability to match demand surges.</p>
             <div className="flex flex-wrap gap-3">
               <Link to="/admin/drivers" className="btn btn-primary text-xs px-4 py-2">Manage Drivers</Link>
-              <Link to="/admin/drivers" className="btn btn-muted text-xs px-4 py-2">Add Driver</Link>
+              <Link to="/admin/drivers/new" className="btn btn-muted text-xs px-4 py-2">Add Driver</Link>
             </div>
           </div>
         </div>
