@@ -90,6 +90,12 @@ JWT_SECRET=replace_with_secure_secret
 ```
 (Optional) Additional vars as features expand (payments, logging, etc.).
 
+Create `client/.env` (NOT committed) with:
+```
+VITE_GOOGLE_PLACES_API_KEY=YOUR_BROWSER_RESTRICTED_KEY
+```
+Key should be restricted to Maps JavaScript API + Places API, HTTP referrers. Autocomplete gracefully degrades to plain text inputs if absent.
+
 ## Installation
 From repo root:
 ```powershell

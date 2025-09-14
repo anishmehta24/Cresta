@@ -6,6 +6,7 @@ import bookingService from '../services/bookingService'
 import { formatINR } from '../services/currency'
 import authService from '../services/authService'
 import FormInput from '../components/ui/FormInput'
+import LocationAutocomplete from '../components/ui/LocationAutocomplete'
 import { Skeleton } from '../components/ui/Skeleton'
 
 const CarRental = () => {
@@ -284,7 +285,7 @@ const CarRental = () => {
               <h3 className="text-sm font-medium tracking-wide uppercase text-gray-500 mb-4">Rental Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
                 <div className="md:col-span-2 flex flex-col gap-2">
-                  <FormInput label="Pickup Address" value={pickupAddress} onChange={e=>setPickupAddress(e.target.value)} placeholder="Enter pickup location" />
+                  <LocationAutocomplete label="Pickup Address" name="pickupAddress" value={pickupAddress} onChange={e=>setPickupAddress(e.target.value)} placeholder="Start typing pickup" />
                   {recent.length > 0 && (
                     <div className="flex flex-wrap gap-2 -mt-2">
                       {recent.map(r => (
@@ -296,7 +297,7 @@ const CarRental = () => {
                 <FormInput label="Start Date" type="date" value={rentalDates.start} min={new Date().toISOString().split('T')[0]} onChange={e=>setRentalDates(d=>({...d,start:e.target.value}))} />
                 <FormInput label="End Date" type="date" value={rentalDates.end} min={rentalDates.start || new Date().toISOString().split('T')[0]} onChange={e=>setRentalDates(d=>({...d,end:e.target.value}))} />
                 <div className="flex items-end h-full">
-                  <button disabled={!canSubmit} onClick={submitRental} className="btn btn-primary w-full disabled:opacity-50">{submitting ? 'Submitting…' : 'Create Rental'}</button>
+                  <button disabled={!canSubmit} onClick={submitRental} className="btn w-full disabled:opacity-50">{submitting ? 'Submitting…' : 'Create Rental'}</button>
                 </div>
                 {rentalCart.length > 0 && (
                   <div className="text-[11px] text-gray-500 self-end">{rentalCart.length} cars; {rentalCart.reduce((s,i)=>s+i.quantity,0)} units</div>

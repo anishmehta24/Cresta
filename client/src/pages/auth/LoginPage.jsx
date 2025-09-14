@@ -81,7 +81,7 @@ export default function LoginPage() {
               </label>
               <a href="#" className="text-xs font-medium text-gray-600 hover:text-gray-900">Forgot password?</a>
             </div>
-            <button type="submit" disabled={isLoading} className="btn btn-primary w-full disabled:opacity-50">
+            <button type="submit" disabled={isLoading} className="btn w-full disabled:opacity-50">
               {isLoading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>

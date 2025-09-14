@@ -5,6 +5,7 @@ import { addLocation, getRecentLocations } from '../services/recentLocations'
 import bookingService from '../services/bookingService'
 import authService from '../services/authService'
 import FormInput from '../components/ui/FormInput'
+import LocationAutocomplete from '../components/ui/LocationAutocomplete'
 import { Skeleton } from '../components/ui/Skeleton'
 
 const RideBooking = () => {
@@ -12,6 +13,8 @@ const RideBooking = () => {
   const [formData, setFormData] = useState({
     pickupLocation: '',
     dropoffLocation: '',
+    pickupCoords: null, // [lng, lat]
+    dropoffCoords: null, // [lng, lat]
     pickupDate: '',
     pickupTime: '',
     passengers: '1',
@@ -53,7 +56,18 @@ const RideBooking = () => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      ...(name === 'pickupLocation' ? { pickupCoords: null } : {}),
+      ...(name === 'dropoffLocation' ? { dropoffCoords: null } : {})
+    }))
+  }
+
+  const handlePlaceSelect = ({ name, address, coords }) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: address,
+      ...(name === 'pickupLocation' ? { pickupCoords: coords || null } : {}),
+      ...(name === 'dropoffLocation' ? { dropoffCoords: coords || null } : {})
     }))
   }
 
@@ -142,8 +156,8 @@ const RideBooking = () => {
             <div className="card p-6">
               <form onSubmit={handleLocationSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput label="Pickup Location" name="pickupLocation" value={formData.pickupLocation} onChange={handleInputChange} required placeholder="Enter pickup address" />
-                  <FormInput label="Drop-off Location" name="dropoffLocation" value={formData.dropoffLocation} onChange={handleInputChange} required placeholder="Enter destination" />
+                  <LocationAutocomplete label="Pickup Location" name="pickupLocation" value={formData.pickupLocation} onChange={handleInputChange} onSelect={handlePlaceSelect} required placeholder="Start typing pickup address" />
+                  <LocationAutocomplete label="Drop-off Location" name="dropoffLocation" value={formData.dropoffLocation} onChange={handleInputChange} onSelect={handlePlaceSelect} required placeholder="Start typing destination" />
                 </div>
                 {recent.length > 0 && (
                   <div className="-mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -180,7 +194,7 @@ const RideBooking = () => {
                   </label>
                 </div>
                 {!showCarSelection && (
-                  <button type="submit" className="btn btn-primary w-full">Find Available Cars</button>
+                  <button type="submit" className="btn w-full">Find Available Cars</button>
                 )}
               </form>
             </div>
@@ -227,12 +241,24 @@ const RideBooking = () => {
                     {formData.pickupLocation || 'Not selected'}
                   </span>
                 </div>
+                {formData.pickupCoords && (
+                  <div className="flex justify-between text-[10px] text-gray-500">
+                    <span>Pickup Coords:</span>
+                    <span>[{formData.pickupCoords[0].toFixed(4)}, {formData.pickupCoords[1].toFixed(4)}]</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Drop-off:</span>
                   <span className="font-medium text-gray-900">
                     {formData.dropoffLocation || 'Not selected'}
                   </span>
                 </div>
+                {formData.dropoffCoords && (
+                  <div className="flex justify-between text-[10px] text-gray-500">
+                    <span>Drop Coords:</span>
+                    <span>[{formData.dropoffCoords[0].toFixed(4)}, {formData.dropoffCoords[1].toFixed(4)}]</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Date & Time:</span>
                   <span className="font-medium text-gray-900">

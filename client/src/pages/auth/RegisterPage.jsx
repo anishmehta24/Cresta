@@ -144,7 +144,7 @@ const RegisterPage = () => {
 
             {/* Submit Button */}
             <div>
-              <button type="submit" disabled={isLoading} className="btn btn-primary w-full disabled:opacity-50">
+              <button type="submit" disabled={isLoading} className="btn w-full disabled:opacity-50">
                 {isLoading ? 'Creating Account…' : 'Create Account'}
               </button>
             </div>
