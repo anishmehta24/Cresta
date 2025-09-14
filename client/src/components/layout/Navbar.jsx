@@ -39,6 +39,9 @@ const Navbar = () => {
     ...(isAuthenticated ? [
       { name: 'My Rides', path: '/my-rides' },
       { name: 'My Rentals', path: '/my-rentals' }
+    ] : []),
+    ...(user?.role === 'admin' ? [
+      { name: 'Admin', path: '/admin' }
     ] : [])
   ]
 
@@ -104,6 +107,14 @@ const Navbar = () => {
                         className="block px-4 py-2.5 text-sm text-gray-300 hover:bg-[var(--mono-bg-3)] hover:text-white transition-colors"
                         onClick={() => setIsProfileMenuOpen(false)}
                       >Profile</Link>
+                      {user?.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          role="menuitem"
+                          className="block px-4 py-2.5 text-sm text-gray-300 hover:bg-[var(--mono-bg-3)] hover:text-white transition-colors"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >Admin Dashboard</Link>
+                      )}
                       <Link
                         to="/my-rides"
                         role="menuitem"
