@@ -1,97 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import bookingService from '../services/bookingService'
+import authService from '../services/authService'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+import ErrorMessage from '../components/common/ErrorMessage'
 
 const RentalHistory = () => {
   const [filter, setFilter] = useState('all') // all, active, completed, cancelled, upcoming
+  const [rentals, setRentals] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const rentalHistory = [
-    {
-      id: 'RN001',
-      bookingDate: '2025-08-20',
-      startDate: '2025-08-25',
-      endDate: '2025-08-28',
-      cars: [
-        {
-          name: 'Toyota Camry',
-          category: 'sedan',
-          quantity: 1,
-          pricePerDay: 45,
-          totalDays: 3
-        }
-      ],
-      totalAmount: 145.80, // including tax
-      status: 'completed',
-      pickupLocation: 'Downtown Office',
-      returnLocation: 'Downtown Office'
-    },
-    {
-      id: 'RN002',
-      bookingDate: '2025-08-28',
-      startDate: '2025-09-01',
-      endDate: '2025-09-05',
-      cars: [
-        {
-          name: 'BMW X5',
-          category: 'suv',
-          quantity: 1,
-          pricePerDay: 85,
-          totalDays: 4
-        },
-        {
-          name: 'Honda Civic',
-          category: 'compact',
-          quantity: 2,
-          pricePerDay: 35,
-          totalDays: 4
-        }
-      ],
-      totalAmount: 621.60, // including tax
-      status: 'active',
-      pickupLocation: 'Airport Terminal',
-      returnLocation: 'Downtown Office'
-    },
-    {
-      id: 'RN003',
-      bookingDate: '2025-08-15',
-      startDate: '2025-09-10',
-      endDate: '2025-09-12',
-      cars: [
-        {
-          name: 'Mercedes E-Class',
-          category: 'luxury',
-          quantity: 1,
-          pricePerDay: 95,
-          totalDays: 2
-        }
-      ],
-      totalAmount: 205.20, // including tax
-      status: 'upcoming',
-      pickupLocation: 'Downtown Office',
-      returnLocation: 'Downtown Office'
-    },
-    {
-      id: 'RN004',
-      bookingDate: '2025-08-10',
-      startDate: '2025-08-15',
-      endDate: '2025-08-17',
-      cars: [
-        {
-          name: 'Ford Explorer',
-          category: 'suv',
-          quantity: 1,
-          pricePerDay: 75,
-          totalDays: 2
-        }
-      ],
-      totalAmount: 162.00, // including tax
-      status: 'cancelled',
-      pickupLocation: 'Airport Terminal',
-      returnLocation: 'Airport Terminal',
-      cancelReason: 'Customer request - schedule change'
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      setLoading(true); setError(null)
+      try {
+        const user = authService.getCurrentUser()
+        if (!user) { setError('Not authenticated'); return }
+        const data = await bookingService.getUserRentals(user._id || user.id)
+        if (!mounted) return
+        const mapped = (data || []).map(b => ({
+          id: b._id,
+          bookingDate: new Date(b.createdAt).toISOString().split('T')[0],
+          startDate: new Date(b.startTime).toISOString().split('T')[0],
+          endDate: b.endTime ? new Date(b.endTime).toISOString().split('T')[0] : '-',
+          cars: (b.cars || []).map(c => ({ name: c.carId?.model || 'Car', category: (c.carId?.type || '').toLowerCase(), quantity: 1, pricePerDay: c.carId?.pricePerDay || 0, totalDays: b.endTime ? Math.max(1, Math.ceil((new Date(b.endTime)- new Date(b.startTime))/86400000)) : 1 })),
+          totalAmount: b.totalAmount || 0,
+          status: (b.status || '').toLowerCase(),
+          pickupLocation: b.pickupLocation?.address || 'N/A',
+          returnLocation: b.pickupLocation?.address || 'N/A',
+          cancelReason: b.status === 'CANCELLED' ? 'Cancelled' : null
+        }))
+        setRentals(mapped)
+      } catch (e) {
+        if (mounted) setError(e.message || 'Failed to load rentals')
+      } finally {
+        if (mounted) setLoading(false)
+      }
     }
-  ]
+    load()
+    return ()=>{ mounted = false }
+  }, [])
 
-  const filteredRentals = rentalHistory.filter(rental => {
+  const filteredRentals = rentals.filter(rental => {
     if (filter === 'all') return true
     return rental.status === filter
   })
@@ -198,11 +150,11 @@ const RentalHistory = () => {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               {[
-                { key: 'all', label: 'All Rentals', count: rentalHistory.length },
-                { key: 'active', label: 'Active', count: rentalHistory.filter(r => r.status === 'active').length },
-                { key: 'upcoming', label: 'Upcoming', count: rentalHistory.filter(r => r.status === 'upcoming').length },
-                { key: 'completed', label: 'Completed', count: rentalHistory.filter(r => r.status === 'completed').length },
-                { key: 'cancelled', label: 'Cancelled', count: rentalHistory.filter(r => r.status === 'cancelled').length }
+                { key: 'all', label: 'All Rentals', count: rentals.length },
+                { key: 'active', label: 'Active', count: rentals.filter(r => r.status === 'active').length },
+                { key: 'upcoming', label: 'Upcoming', count: rentals.filter(r => r.status === 'upcoming').length },
+                { key: 'completed', label: 'Completed', count: rentals.filter(r => r.status === 'completed').length },
+                { key: 'cancelled', label: 'Cancelled', count: rentals.filter(r => r.status === 'cancelled').length }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -220,6 +172,9 @@ const RentalHistory = () => {
           </div>
         </div>
 
+  {loading && <LoadingSpinner className="my-4" />}
+  <ErrorMessage message={error} />
+
         {/* Rental List */}
         <div className="space-y-6">
           {filteredRentals.map((rental) => (
@@ -234,7 +189,7 @@ const RentalHistory = () => {
                       </span>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">${rental.totalAmount}</div>
+                      <div className="text-2xl font-bold text-gray-900">${rental.totalAmount.toFixed(2)}</div>
                       <div className="text-sm text-gray-500">
                         {getDurationText(rental.startDate, rental.endDate)}
                       </div>
@@ -395,30 +350,10 @@ const RentalHistory = () => {
 
         {/* Summary Stats */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {rentalHistory.filter(r => r.status === 'completed').length}
-            </div>
-            <div className="text-gray-600">Completed Rentals</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">
-              ${rentalHistory.filter(r => r.status === 'completed').reduce((sum, r) => sum + r.totalAmount, 0).toFixed(2)}
-            </div>
-            <div className="text-gray-600">Total Spent</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">
-              {rentalHistory.reduce((sum, r) => sum + getTotalCars(r.cars), 0)}
-            </div>
-            <div className="text-gray-600">Cars Rented</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="text-3xl font-bold text-orange-600 mb-2">
-              {rentalHistory.filter(r => r.status === 'active' || r.status === 'upcoming').length}
-            </div>
-            <div className="text-gray-600">Active/Upcoming</div>
-          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-blue-600 mb-2">{rentals.filter(r => r.status === 'completed').length}</div><div className="text-gray-600">Completed Rentals</div></div>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-green-600 mb-2">${rentals.filter(r => r.status === 'completed').reduce((sum, r) => sum + r.totalAmount, 0).toFixed(2)}</div><div className="text-gray-600">Total Spent</div></div>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-purple-600 mb-2">{rentals.reduce((sum, r) => sum + getTotalCars(r.cars), 0)}</div><div className="text-gray-600">Cars Rented</div></div>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-orange-600 mb-2">{rentals.filter(r => r.status === 'active' || r.status === 'upcoming').length}</div><div className="text-gray-600">Active/Upcoming</div></div>
         </div>
       </div>
     </div>

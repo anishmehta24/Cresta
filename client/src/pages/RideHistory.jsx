@@ -1,84 +1,55 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import bookingService from '../services/bookingService'
+import authService from '../services/authService'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+import ErrorMessage from '../components/common/ErrorMessage'
 
 const RideHistory = () => {
   const [filter, setFilter] = useState('all') // all, completed, cancelled, upcoming
+  const [rides, setRides] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const rideHistory = [
-    {
-      id: 'RD001',
-      date: '2025-08-25',
-      time: '14:30',
-      pickup: '123 Main St, Downtown',
-      dropoff: '456 Oak Ave, Uptown',
-      driver: 'John Smith',
-      carType: 'Standard',
-      duration: '25 mins',
-      distance: '8.5 km',
-      fare: 28.50,
-      status: 'completed',
-      rating: 5
-    },
-    {
-      id: 'RD002',
-      date: '2025-08-20',
-      time: '09:15',
-      pickup: '789 Pine St, Westside',
-      dropoff: 'City Airport Terminal 2',
-      driver: 'Sarah Johnson',
-      carType: 'Premium',
-      duration: '35 mins',
-      distance: '15.2 km',
-      fare: 45.00,
-      status: 'completed',
-      rating: 4
-    },
-    {
-      id: 'RD003',
-      date: '2025-09-02',
-      time: '16:00',
-      pickup: 'Home - 321 Elm St',
-      dropoff: 'Conference Center',
-      driver: 'To be assigned',
-      carType: 'Economy',
-      duration: 'Est. 20 mins',
-      distance: 'Est. 6.8 km',
-      fare: 22.00,
-      status: 'upcoming',
-      rating: null
-    },
-    {
-      id: 'RD004',
-      date: '2025-08-18',
-      time: '22:45',
-      pickup: 'Restaurant District',
-      dropoff: 'Home - 321 Elm St',
-      driver: 'Mike Wilson',
-      carType: 'Standard',
-      duration: '18 mins',
-      distance: '5.3 km',
-      fare: 19.50,
-      status: 'cancelled',
-      rating: null,
-      cancelReason: 'Driver cancelled due to traffic'
-    },
-    {
-      id: 'RD005',
-      date: '2025-08-15',
-      time: '07:30',
-      pickup: 'Home - 321 Elm St',
-      dropoff: 'Business District',
-      driver: 'Emma Davis',
-      carType: 'SUV',
-      duration: '30 mins',
-      distance: '12.1 km',
-      fare: 38.75,
-      status: 'completed',
-      rating: 5
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      setLoading(true); setError(null)
+      try {
+        const user = authService.getCurrentUser()
+        if (!user) {
+          setError('Not authenticated'); return
+        }
+        const data = await bookingService.getUserRides(user._id || user.id)
+        if (!mounted) return
+        // Normalize mapping
+        const mapped = (data || []).map(b => ({
+          _raw: b,
+          id: b._id,
+          date: new Date(b.startTime).toISOString().split('T')[0],
+            time: new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          pickup: b.pickupLocation?.address || 'N/A',
+          dropoff: b.dropoffLocation?.address || 'N/A',
+          driver: b.cars?.[0]?.driverId ? 'Assigned' : 'Unassigned',
+          carType: b.cars?.length ? `${b.cars.length} Car(s)` : 'Pending',
+          duration: b.endTime ? `${Math.max(1, Math.round((new Date(b.endTime)-new Date(b.startTime))/60000))} mins` : '—',
+          distance: '—',
+          fare: b.totalAmount || 0,
+          status: (b.status || '').toLowerCase(),
+          rating: null
+        }))
+        setRides(mapped)
+      } catch (e) {
+        if (mounted) setError(e.message || 'Failed to load rides')
+      } finally {
+        if (mounted) setLoading(false)
+      }
     }
-  ]
+    load()
+    return () => { mounted = false }
+  }, [])
 
-  const filteredRides = rideHistory.filter(ride => {
+  const filteredRides = rides.filter(ride => {
     if (filter === 'all') return true
     return ride.status === filter
   })
@@ -184,10 +155,10 @@ const RideHistory = () => {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               {[
-                { key: 'all', label: 'All Rides', count: rideHistory.length },
-                { key: 'upcoming', label: 'Upcoming', count: rideHistory.filter(r => r.status === 'upcoming').length },
-                { key: 'completed', label: 'Completed', count: rideHistory.filter(r => r.status === 'completed').length },
-                { key: 'cancelled', label: 'Cancelled', count: rideHistory.filter(r => r.status === 'cancelled').length }
+                { key: 'all', label: 'All Rides', count: rides.length },
+                { key: 'upcoming', label: 'Upcoming', count: rides.filter(r => r.status === 'upcoming').length },
+                { key: 'completed', label: 'Completed', count: rides.filter(r => r.status === 'completed').length },
+                { key: 'cancelled', label: 'Cancelled', count: rides.filter(r => r.status === 'cancelled').length }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -205,6 +176,9 @@ const RideHistory = () => {
           </div>
         </div>
 
+        {loading && <div className="text-sm text-gray-500">Loading rides...</div>}
+        {error && <div className="text-sm text-red-500">{error}</div>}
+
         {/* Ride List */}
         <div className="space-y-6">
           {filteredRides.map((ride) => (
@@ -219,7 +193,7 @@ const RideHistory = () => {
                       </span>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">${ride.fare}</div>
+                      <div className="text-2xl font-bold text-gray-900">${ride.fare.toFixed(2)}</div>
                       <div className="text-sm text-gray-500">{ride.date} at {ride.time}</div>
                     </div>
                   </div>
@@ -250,22 +224,10 @@ const RideHistory = () => {
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-3">Trip Details</h4>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Driver:</span>
-                          <span className="font-medium text-gray-900">{ride.driver}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Car Type:</span>
-                          <span className="font-medium text-gray-900">{ride.carType}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Duration:</span>
-                          <span className="font-medium text-gray-900">{ride.duration}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Distance:</span>
-                          <span className="font-medium text-gray-900">{ride.distance}</span>
-                        </div>
+                        <div className="flex justify-between"><span className="text-gray-600">Driver:</span><span className="font-medium text-gray-900">{ride.driver}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-600">Cars:</span><span className="font-medium text-gray-900">{ride.carType}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-600">Duration:</span><span className="font-medium text-gray-900">{ride.duration}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-600">Distance:</span><span className="font-medium text-gray-900">{ride.distance}</span></div>
                         {ride.rating && (
                           <div className="flex justify-between items-center">
                             <span className="text-gray-600">Rating:</span>
@@ -326,31 +288,10 @@ const RideHistory = () => {
 
         {/* Summary Stats */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {rideHistory.filter(r => r.status === 'completed').length}
-            </div>
-            <div className="text-gray-600">Completed Rides</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">
-              ${rideHistory.filter(r => r.status === 'completed').reduce((sum, r) => sum + r.fare, 0).toFixed(2)}
-            </div>
-            <div className="text-gray-600">Total Spent</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">
-              {(rideHistory.filter(r => r.status === 'completed' && r.rating).reduce((sum, r) => sum + r.rating, 0) / 
-               rideHistory.filter(r => r.status === 'completed' && r.rating).length || 0).toFixed(1)}
-            </div>
-            <div className="text-gray-600">Average Rating</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <div className="text-3xl font-bold text-orange-600 mb-2">
-              {rideHistory.filter(r => r.status === 'upcoming').length}
-            </div>
-            <div className="text-gray-600">Upcoming Rides</div>
-          </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-blue-600 mb-2">{rides.filter(r => r.status === 'completed').length}</div><div className="text-gray-600">Completed Rides</div></div>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-green-600 mb-2">${rides.filter(r => r.status === 'completed').reduce((sum, r) => sum + r.fare, 0).toFixed(2)}</div><div className="text-gray-600">Total Spent</div></div>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-purple-600 mb-2">{(rides.filter(r => r.status === 'completed' && r.rating).reduce((sum, r) => sum + (r.rating || 0), 0) / (rides.filter(r => r.status === 'completed' && r.rating).length || 1)).toFixed(1)}</div><div className="text-gray-600">Average Rating</div></div>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-orange-600 mb-2">{rides.filter(r => r.status === 'upcoming').length}</div><div className="text-gray-600">Upcoming Rides</div></div>
         </div>
       </div>
     </div>

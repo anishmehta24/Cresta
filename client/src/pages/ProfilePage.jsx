@@ -1,9 +1,31 @@
 import { useAuth } from '../context/AuthContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import bookingService from '../services/bookingService'
+import LoadingSpinner from '../components/common/LoadingSpinner'
+import ErrorMessage from '../components/common/ErrorMessage'
 
 const ProfilePage = () => {
   const { user, logout } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const [metrics, setMetrics] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      if (!user) return
+      setLoading(true); setError(null)
+      try {
+        const data = await bookingService.getUserProfile(user._id || user.id)
+        if (mounted) setMetrics(data)
+      } catch (e) {
+        if (mounted) setError(e.message || 'Failed to load profile metrics')
+      } finally { if (mounted) setLoading(false) }
+    }
+    load()
+    return () => { mounted = false }
+  }, [user])
 
   const handleLogout = () => {
     logout()
@@ -155,14 +177,20 @@ const ProfilePage = () => {
                 <h2 className="text-lg font-semibold text-white">Account Summary</h2>
               </div>
               <div className="px-6 py-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Total Rides</span>
-                  <span className="text-sm font-medium text-white">0</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Total Rentals</span>
-                  <span className="text-sm font-medium text-white">0</span>
-                </div>
+                {loading && <LoadingSpinner size={20} />}
+                <ErrorMessage message={error} />
+                {!loading && !error && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Total Rides</span>
+                      <span className="text-sm font-medium text-white">{metrics?.totalRides ?? 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Total Rentals</span>
+                      <span className="text-sm font-medium text-white">{metrics?.totalRentals ?? 0}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Member Since</span>
                   <span className="text-sm font-medium text-white">
