@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext'
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import bookingService from '../services/bookingService'
 import ErrorMessage from '../components/common/ErrorMessage'
 import StatCard from '../components/ui/StatCard'
@@ -126,10 +127,11 @@ const ProfilePage = () => {
             <div className="card p-6">
               <h3 className="text-sm font-medium tracking-wide uppercase text-gray-500 mb-4">Quick Actions</h3>
               <div className="flex flex-col gap-2">
-                <button className="action-chip">Ride History</button>
-                <button className="action-chip">Rental History</button>
-                <button className="action-chip">Payment Methods</button>
-                <button className="action-chip">Settings</button>
+                <Link to="/my-rides" className="action-chip">Ride History</Link>
+                <Link to="/my-rentals" className="action-chip">Rental History</Link>
+                <Link to="/payments" className="action-chip">Payments</Link>
+                <Link to="/book-ride" className="action-chip">Book New Ride</Link>
+                <Link to="/rent-car" className="action-chip">Start a Rental</Link>
               </div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import authService from '../services/authService'
 import ErrorMessage from '../components/common/ErrorMessage'
 import Tabs from '../components/ui/Tabs'
 import StatusBadge from '../components/ui/StatusBadge'
+import { toast } from '../services/toastBus'
 import { formatINR } from '../services/currency'
 import EmptyState from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -86,7 +87,7 @@ const RideHistory = () => {
       await bookingService.cancelRide(rideId)
       setRides(prev => prev.map(r => r.id === rideId ? { ...r, status: 'cancelled' } : r))
     } catch (e) {
-      alert(e.message || 'Failed to cancel ride')
+      toast.error(e.message || 'Failed to cancel ride')
     }
   }
 

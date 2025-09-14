@@ -122,14 +122,14 @@ const CarRental = () => {
         endTime: isoEnd,
         carIds
       })
-      alert('Rental created successfully')
+      toast.success('Rental created successfully')
       addLocation(pickupAddress)
       setRecent(getRecentLocations())
       setRentalCart([])
       setPickupAddress('')
       setRentalDates({ start: '', end: '' })
     } catch (e) {
-      alert(e.message || 'Failed to create rental')
+      toast.error(e.message || 'Failed to create rental')
     } finally {
       setSubmitting(false)
     }

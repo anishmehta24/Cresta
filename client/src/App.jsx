@@ -7,6 +7,7 @@ import CarRental from './pages/CarRental'
 import RentalCart from './pages/RentalCart'
 import RideHistory from './pages/RideHistory'
 import RentalHistory from './pages/RentalHistory'
+import PaymentsPage from './pages/PaymentsPage'
 // import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
@@ -28,6 +29,7 @@ function App() {
             <Route path="/my-rides" element={<RideHistory />} />
             <Route path="/my-rentals" element={<RentalHistory />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/login" element={<LoginPage/>} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="*" element={<NotFoundPage />} />

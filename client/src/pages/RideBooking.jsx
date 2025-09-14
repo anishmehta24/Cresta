@@ -114,9 +114,9 @@ const RideBooking = () => {
         carIds: [formData.selectedCar]
       })
       console.log('Ride created', ride)
-      alert('Ride booked successfully!')
+      toast.success('Ride booked successfully')
     } catch (e) {
-      alert(e.message || 'Booking failed')
+      toast.error(e.message || 'Booking failed')
     }
   }
 

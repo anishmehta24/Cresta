@@ -1,31 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from '../services/toastBus'
+import { formatINR } from '../services/currency'
 
 const RentalCart = () => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: 'Toyota Camry',
-      category: 'sedan',
-      pricePerDay: 45,
-      quantity: 1,
-      startDate: '2025-09-01',
-      endDate: '2025-09-05',
-      image: '/api/placeholder/100/80',
-      features: ['AC', 'Bluetooth', 'GPS', 'USB Charging']
-    },
-    {
-      id: 3,
-      name: 'BMW X5',
-      category: 'suv',
-      pricePerDay: 85,
-      quantity: 1,
-      startDate: '2025-09-02',
-      endDate: '2025-09-04',
-      image: '/api/placeholder/100/80',
-      features: ['AC', 'Bluetooth', 'GPS', 'Leather Seats', 'Sunroof']
-    }
-  ])
+  const [cartItems, setCartItems] = useState([])
 
   const [customerInfo, setCustomerInfo] = useState({
     firstName: '',
@@ -93,19 +72,19 @@ const RentalCart = () => {
     const missingFields = requiredFields.filter(field => !customerInfo[field])
     
     if (missingFields.length > 0) {
-      alert(`Please fill in: ${missingFields.join(', ')}`)
+      toast.warn(`Missing: ${missingFields.join(', ')}`)
       return
     }
 
     // Validate dates
     const invalidDates = cartItems.filter(item => !item.startDate || !item.endDate)
     if (invalidDates.length > 0) {
-      alert('Please set rental dates for all vehicles')
+      toast.warn('Set rental dates for all vehicles')
       return
     }
 
     console.log('Checkout:', { cartItems, customerInfo, total })
-    alert('Rental booking confirmed! You will receive a confirmation email shortly.')
+    toast.success('Rental booking confirmed')
     setCartItems([])
   }
 
@@ -225,10 +204,10 @@ const RentalCart = () => {
 
                         <div className="text-right">
                           <div className="text-sm text-gray-600">
-                            ${item.pricePerDay}/day × {getDaysBetween(item.startDate, item.endDate)} days × {item.quantity}
+                            {formatINR(item.pricePerDay)}/day × {getDaysBetween(item.startDate, item.endDate)} days × {item.quantity}
                           </div>
                           <div className="text-2xl font-bold text-gray-900">
-                            ${getItemTotal(item)}
+                            {formatINR(getItemTotal(item))}
                           </div>
                         </div>
 
@@ -341,7 +320,7 @@ const RentalCart = () => {
                     <span className="text-gray-600">
                       {item.name} × {item.quantity}
                     </span>
-                    <span className="font-medium">${getItemTotal(item)}</span>
+                    <span className="font-medium">{formatINR(getItemTotal(item))}</span>
                   </div>
                 ))}
               </div>
@@ -349,15 +328,15 @@ const RentalCart = () => {
               <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${subtotal.toFixed(2)}</span>
+                  <span className="font-medium">{formatINR(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tax (8%)</span>
-                  <span className="font-medium">${tax.toFixed(2)}</span>
+                  <span className="font-medium">{formatINR(tax)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatINR(total)}</span>
                 </div>
               </div>
 

@@ -5,6 +5,7 @@ import authService from '../services/authService'
 import ErrorMessage from '../components/common/ErrorMessage'
 import Tabs from '../components/ui/Tabs'
 import StatusBadge from '../components/ui/StatusBadge'
+import { toast } from '../services/toastBus'
 import { formatINR } from '../services/currency'
 import EmptyState from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -74,12 +75,12 @@ const RentalHistory = () => {
     try {
       await bookingService.cancelRental(id)
       setRentals(prev => prev.map(r => r.id === id ? { ...r, status: 'cancelled' } : r))
-    } catch (e) { alert(e.message || 'Failed to cancel rental') }
+    } catch (e) { toast.error(e.message || 'Failed to cancel rental') }
   }
 
   const extendRental = (rentalId) => {
     console.log('Extending rental:', rentalId)
-    alert('Redirecting to extension page...')
+    toast.info('Extension flow coming soon')
   }
 
   const rebookRental = (rental) => {
