@@ -1,6 +1,8 @@
 import userModel from '../models/user.model.js';
 import * as userService from '../services/user.service.js';
 import { validationResult } from 'express-validator';
+import bookingModel from '../models/booking.model.js';
+import paymentModel from '../models/payment.model.js';
 
 export const registerUser = async (req, res, next) => {
     try {
@@ -123,5 +125,25 @@ export const deleteUser = async (req, res, next) => {
         res.status(200).json({ message: 'User account deactivated successfully', user });
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+};
+
+export const getUserStats = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        if (req.user._id.toString() !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        const [rides, rentals, totalSpentAgg] = await Promise.all([
+            bookingModel.countDocuments({ userId, bookingType: 'RIDE' }),
+            bookingModel.countDocuments({ userId, bookingType: 'RENTAL' }),
+            paymentModel.aggregate([
+                { $match: { userId, status: 'PAID' } },
+                { $group: { _id: null, total: { $sum: '$amount' } } }
+            ])
+        ]);
+        res.status(200).json({ totalRides: rides, totalRentals: rentals, totalSpent: totalSpentAgg[0]?.total || 0 });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };

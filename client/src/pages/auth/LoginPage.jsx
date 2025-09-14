@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { toast } from '../../services/toastBus'
 import { useAuth } from '../../context/AuthContext'
+import FormInput from '../../components/ui/FormInput'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -58,131 +59,32 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
-            <span className="text-2xl font-bold text-white">Cresta</span>
+    <div className="min-h-screen flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-sm">
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-white font-bold text-xl">C</div>
+            <span className="text-2xl font-semibold tracking-tight text-gray-900">Cresta</span>
           </Link>
+          <h1 className="mt-6 text-xl font-semibold tracking-tight text-gray-900">Sign in to your account</h1>
+          <p className="mt-2 text-sm text-gray-500">Or <Link to="/register" className="underline underline-offset-4 hover:text-gray-900">create a new account</Link></p>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-white">
-          Sign in to your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-400">
-          Or{' '}
-          <Link
-            to="/register"
-            className="font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200"
-          >
-            create a new account
-          </Link>
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-gray-800 py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-gray-700">
-          {error && (
-            <p className="mb-4 text-sm text-red-400 text-center">{error}</p>
-          )}
-
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  autoComplete="email"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-600 rounded-md placeholder-gray-500 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  autoComplete="current-password"
-                  required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-600 rounded-md placeholder-gray-500 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your password"
-                />
-              </div>
-            </div>
-
-            {/* Remember me and Forgot password */}
+        <div className="card p-6">
+          {error && <div className="mb-4 text-xs font-medium text-red-600 text-center bg-red-50 border border-red-200 rounded px-2 py-1">{error}</div>}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <FormInput label="Email" name="email" type="email" value={formData.email} onChange={handleInputChange} required placeholder="you@example.com" />
+            <FormInput label="Password" name="password" type="password" value={formData.password} onChange={handleInputChange} required placeholder="••••••••" />
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="rememberMe"
-                  name="rememberMe"
-                  type="checkbox"
-                  checked={formData.rememberMe}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded bg-gray-700"
-                />
-                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-300">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                >
-                  Forgot your password?
-                </a>
-              </div>
+              <label className="flex items-center gap-2 select-none text-xs text-gray-600">
+                <input type="checkbox" name="rememberMe" checked={formData.rememberMe} onChange={handleInputChange} className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
+                Remember me
+              </label>
+              <a href="#" className="text-xs font-medium text-gray-600 hover:text-gray-900">Forgot password?</a>
             </div>
-
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white transition-colors duration-200 ${
-                  isLoading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                }`}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Signing in...
-                  </div>
-                ) : (
-                  'Sign in'
-                )}
-              </button>
-            </div>
+            <button type="submit" disabled={isLoading} className="btn btn-primary w-full disabled:opacity-50">
+              {isLoading ? 'Signing in…' : 'Sign In'}
+            </button>
           </form>
-
-          {/* keep rest of your social login + features section untouched */}
         </div>
       </div>
     </div>

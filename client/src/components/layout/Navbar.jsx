@@ -36,8 +36,10 @@ const Navbar = () => {
     { name: 'Home', path: '/' },
     { name: 'Book a Ride', path: '/book-ride' },
     { name: 'Rent a Car', path: '/rent-car' },
-    { name: 'My Rides', path: '/my-rides' },
-    { name: 'My Rentals', path: '/my-rentals' },
+    ...(isAuthenticated ? [
+      { name: 'My Rides', path: '/my-rides' },
+      { name: 'My Rentals', path: '/my-rentals' }
+    ] : [])
   ]
 
   const isActive = (path) => location.pathname === path

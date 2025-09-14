@@ -5,5 +5,6 @@ const router = express.Router();
 
 // Get dashboard overview (admin only)
 router.get('/overview', authUser, authAdmin, dashboardController.getDashboardOverview);
+router.get('/', authUser, dashboardController.getUserDashboard);
 
 export default router;

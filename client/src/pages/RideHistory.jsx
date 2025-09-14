@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import bookingService from '../services/bookingService'
 import authService from '../services/authService'
-import LoadingSpinner from '../components/common/LoadingSpinner'
 import ErrorMessage from '../components/common/ErrorMessage'
+import Tabs from '../components/ui/Tabs'
+import StatusBadge from '../components/ui/StatusBadge'
+import { formatINR } from '../services/currency'
+import EmptyState from '../components/ui/EmptyState'
+import { Skeleton } from '../components/ui/Skeleton'
 
 const RideHistory = () => {
-  const [filter, setFilter] = useState('all') // all, completed, cancelled, upcoming
+  const navigate = useNavigate()
+  const [filter, setFilter] = useState('all')
   const [rides, setRides] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -49,23 +54,13 @@ const RideHistory = () => {
     return () => { mounted = false }
   }, [])
 
-  const filteredRides = rides.filter(ride => {
-    if (filter === 'all') return true
-    return ride.status === filter
-  })
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'upcoming':
-        return 'bg-blue-100 text-blue-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
+  const filteredRides = rides.filter(r => filter === 'all' ? true : r.status === filter)
+  const tabs = [
+    { key: 'all', label: 'All Rides', count: rides.length },
+    { key: 'upcoming', label: 'Upcoming', count: rides.filter(r => r.status === 'upcoming').length },
+    { key: 'completed', label: 'Completed', count: rides.filter(r => r.status === 'completed').length },
+    { key: 'cancelled', label: 'Cancelled', count: rides.filter(r => r.status === 'cancelled').length },
+  ]
 
   const renderRating = (rating) => {
     if (!rating) return null
@@ -85,115 +80,71 @@ const RideHistory = () => {
     )
   }
 
-  const cancelRide = (rideId) => {
-    if (window.confirm('Are you sure you want to cancel this ride?')) {
-      console.log('Cancelling ride:', rideId)
-      alert('Ride cancelled successfully. You will receive a confirmation email.')
+  const cancelRide = async (rideId) => {
+    if (!window.confirm('Cancel this ride?')) return
+    try {
+      await bookingService.cancelRide(rideId)
+      setRides(prev => prev.map(r => r.id === rideId ? { ...r, status: 'cancelled' } : r))
+    } catch (e) {
+      alert(e.message || 'Failed to cancel ride')
     }
   }
 
   const rebookRide = (ride) => {
-    console.log('Rebooking ride:', ride)
-    alert('Redirecting to booking page with your previous details...')
+    const raw = ride._raw
+    if (!raw) return navigate('/book-ride')
+    try {
+      const start = raw.startTime ? new Date(raw.startTime) : null
+      const pickupDate = start ? start.toISOString().split('T')[0] : ''
+      const pickupTime = start ? start.toISOString().split('T')[1].slice(0,5) : ''
+      const firstCarId = raw.cars && raw.cars[0] && (raw.cars[0].carId?._id || raw.cars[0].carId?.id)
+      navigate('/book-ride', {
+        state: {
+          rebook: true,
+            pickupLocation: ride.pickup,
+            dropoffLocation: ride.dropoff,
+            pickupDate,
+            pickupTime,
+            selectedCar: firstCarId || ''
+        }
+      })
+    } catch {
+      navigate('/book-ride')
+    }
   }
 
-  if (filteredRides.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Rides</h1>
-            <p className="text-gray-600">Track and manage your ride history</p>
-          </div>
-          
-          <div className="text-center py-16">
-            <svg className="w-24 h-24 text-gray-400 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">No rides found</h2>
-            <p className="text-gray-600 mb-8">
-              {filter === 'all' 
-                ? "You haven't booked any rides yet" 
-                : `No ${filter} rides found`
-              }
-            </p>
-            <Link
-              to="/book-ride"
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              Book Your First Ride
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const empty = filteredRides.length === 0
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">My Rides</h1>
-              <p className="text-gray-600">Track and manage your ride history</p>
-            </div>
-            <Link
-              to="/book-ride"
-              className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Book New Ride
-            </Link>
-          </div>
+    <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">My Rides</h1>
+          <p className="text-sm text-gray-500">Track and manage all rides.</p>
         </div>
-
-        {/* Filter Tabs */}
-        <div className="mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              {[
-                { key: 'all', label: 'All Rides', count: rides.length },
-                { key: 'upcoming', label: 'Upcoming', count: rides.filter(r => r.status === 'upcoming').length },
-                { key: 'completed', label: 'Completed', count: rides.filter(r => r.status === 'completed').length },
-                { key: 'cancelled', label: 'Cancelled', count: rides.filter(r => r.status === 'cancelled').length }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setFilter(tab.key)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                    filter === tab.key
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.label} ({tab.count})
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        {loading && <div className="text-sm text-gray-500">Loading rides...</div>}
-        {error && <div className="text-sm text-red-500">{error}</div>}
-
-        {/* Ride List */}
-        <div className="space-y-6">
+        <Link to="/book-ride" className="btn btn-primary text-sm font-semibold">Book Ride</Link>
+      </div>
+      <Tabs tabs={tabs} initial={filter} onChange={setFilter} />
+      <ErrorMessage message={error} />
+      {loading && (
+        <div className="mt-8 space-y-4">{Array.from({length:3}).map((_,i)=>(<Skeleton key={i} className="h-40 rounded-xl" />))}</div>
+      )}
+      {empty && !loading && (
+        <div className="mt-12"><EmptyState title={filter==='all' ? 'No rides yet' : 'Nothing here'} message="Your ride bookings will appear here once created." action={<Link to="/book-ride" className="btn btn-primary">Book First Ride</Link>} /></div>
+      )}
+      {!empty && (
+        <div className="mt-8 space-y-6">
           {filteredRides.map((ride) => (
-            <div key={ride.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+            <div key={ride.id} className="bg-white rounded-xl shadow-token p-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-4">
-                      <span className="text-lg font-bold text-gray-900">#{ride.id}</span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getStatusColor(ride.status)}`}>
-                        {ride.status}
-                      </span>
+                      <span className="text-base font-semibold text-gray-900 tracking-tight">#{ride.id}</span>
+                      <StatusBadge status={ride.status} />
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">${ride.fare.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-gray-900">{formatINR(ride.fare)}</div>
                       <div className="text-sm text-gray-500">{ride.date} at {ride.time}</div>
                     </div>
                   </div>
@@ -249,35 +200,26 @@ const RideHistory = () => {
                   )}
 
                   {/* Actions */}
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-3 mt-4">
                     {ride.status === 'upcoming' && (
                       <button
                         onClick={() => cancelRide(ride.id)}
-                        className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors duration-200"
+                        className="px-3 py-2 text-xs font-medium rounded-md border border-red-300 text-red-600 hover:bg-red-50"
                       >
                         Cancel Ride
                       </button>
                     )}
                     
                     {(ride.status === 'completed' || ride.status === 'cancelled') && (
-                      <button
-                        onClick={() => rebookRide(ride)}
-                        className="px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors duration-200"
-                      >
-                        Book Again
-                      </button>
+                      <button onClick={() => rebookRide(ride)} className="px-3 py-2 text-xs font-medium rounded-md border border-blue-300 text-blue-600 hover:bg-blue-50">Book Again</button>
                     )}
 
                     {ride.status === 'completed' && (
-                      <button className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                        Download Receipt
-                      </button>
+                      <button className="px-3 py-2 text-xs font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50">Receipt</button>
                     )}
 
                     {ride.status === 'upcoming' && (
-                      <button className="px-4 py-2 text-green-600 border border-green-300 rounded-lg hover:bg-green-50 transition-colors duration-200">
-                        Track Ride
-                      </button>
+                      <button className="px-3 py-2 text-xs font-medium rounded-md border border-green-300 text-green-600 hover:bg-green-50">Track</button>
                     )}
                   </div>
                 </div>
@@ -285,15 +227,16 @@ const RideHistory = () => {
             </div>
           ))}
         </div>
+      )}
 
-        {/* Summary Stats */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-blue-600 mb-2">{rides.filter(r => r.status === 'completed').length}</div><div className="text-gray-600">Completed Rides</div></div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-green-600 mb-2">${rides.filter(r => r.status === 'completed').reduce((sum, r) => sum + r.fare, 0).toFixed(2)}</div><div className="text-gray-600">Total Spent</div></div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-purple-600 mb-2">{(rides.filter(r => r.status === 'completed' && r.rating).reduce((sum, r) => sum + (r.rating || 0), 0) / (rides.filter(r => r.status === 'completed' && r.rating).length || 1)).toFixed(1)}</div><div className="text-gray-600">Average Rating</div></div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center"><div className="text-3xl font-bold text-orange-600 mb-2">{rides.filter(r => r.status === 'upcoming').length}</div><div className="text-gray-600">Upcoming Rides</div></div>
+      {!empty && (
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="stat-card text-center"><div className="text-2xl font-semibold mb-1 text-blue-600">{rides.filter(r => r.status === 'completed').length}</div><p className="text-xs tracking-wide uppercase text-gray-500">Completed</p></div>
+          <div className="stat-card text-center"><div className="text-2xl font-semibold mb-1 text-green-600">{formatINR(rides.filter(r => r.status === 'completed').reduce((sum, r) => sum + r.fare, 0))}</div><p className="text-xs tracking-wide uppercase text-gray-500">Total Spent</p></div>
+          <div className="stat-card text-center"><div className="text-2xl font-semibold mb-1 text-purple-600">{(rides.filter(r => r.status === 'completed' && r.rating).reduce((sum, r) => sum + (r.rating || 0), 0) / (rides.filter(r => r.status === 'completed' && r.rating).length || 1)).toFixed(1)}</div><p className="text-xs tracking-wide uppercase text-gray-500">Avg Rating</p></div>
+          <div className="stat-card text-center"><div className="text-2xl font-semibold mb-1 text-orange-600">{rides.filter(r => r.status === 'upcoming').length}</div><p className="text-xs tracking-wide uppercase text-gray-500">Upcoming</p></div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

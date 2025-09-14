@@ -25,4 +25,7 @@ router.put('/:id/status', authUser, authAdmin, [
     body('status').isIn(['PENDING', 'CONFIRMED', 'ONGOING', 'COMPLETED', 'CANCELLED']).withMessage('Invalid status'),
 ], bookingController.updateBookingStatus);
 
+// Cancel rental (user)
+router.post('/:id/cancel', authUser, bookingController.cancelBooking);
+
 export default router;

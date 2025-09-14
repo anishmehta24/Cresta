@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import { toast } from '../services/toastBus'
+import { addLocation, getRecentLocations } from '../services/recentLocations'
 import bookingService from '../services/bookingService'
 import authService from '../services/authService'
+import FormInput from '../components/ui/FormInput'
+import { Skeleton } from '../components/ui/Skeleton'
 
 const RideBooking = () => {
+  const location = useLocation()
   const [formData, setFormData] = useState({
     pickupLocation: '',
     dropoffLocation: '',
@@ -17,6 +23,31 @@ const RideBooking = () => {
   const [cars, setCars] = useState([])
   const [carsLoading, setCarsLoading] = useState(false)
   const [carsError, setCarsError] = useState(null)
+  const [initializedFromState, setInitializedFromState] = useState(false)
+  const [showRebookBanner, setShowRebookBanner] = useState(false)
+  const [recent, setRecent] = useState([])
+
+  // Prefill from navigation state (rebook flow)
+  useEffect(() => {
+    if (initializedFromState) return
+    const st = location.state
+    if (st && st.rebook) {
+      setFormData(prev => ({
+        ...prev,
+        pickupLocation: st.pickupLocation || prev.pickupLocation,
+        dropoffLocation: st.dropoffLocation || prev.dropoffLocation,
+        pickupDate: st.pickupDate || prev.pickupDate,
+        pickupTime: st.pickupTime || prev.pickupTime,
+        selectedCar: st.selectedCar || prev.selectedCar
+      }))
+      if (st.pickupLocation && st.dropoffLocation) {
+        setShowCarSelection(true)
+      }
+      toast.info('Details prefilled from previous ride', { duration: 3000 })
+      setShowRebookBanner(true)
+    }
+    setInitializedFromState(true)
+  }, [location.state, initializedFromState])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -29,6 +60,9 @@ const RideBooking = () => {
   const handleLocationSubmit = async (e) => {
     e.preventDefault()
     if (formData.pickupLocation && formData.dropoffLocation) {
+      addLocation(formData.pickupLocation)
+      addLocation(formData.dropoffLocation)
+      setRecent(getRecentLocations())
       setShowCarSelection(true)
       // Fetch available cars when user proceeds
       setCarsLoading(true)
@@ -43,6 +77,24 @@ const RideBooking = () => {
       }
     }
   }
+
+  // When car selection is auto-shown via prefill, ensure cars load
+  useEffect(() => {
+    const shouldLoad = showCarSelection && cars.length === 0 && !carsLoading && !carsError
+    if (shouldLoad) {
+      (async () => {
+        setCarsLoading(true); setCarsError(null)
+        try {
+          const data = await bookingService.getCars({ status: 'AVAILABLE' })
+          setCars(Array.isArray(data) ? data : (data.cars || []))
+        } catch (err) { setCarsError(err.message || 'Failed to load cars') }
+        finally { setCarsLoading(false) }
+      })()
+    }
+  }, [showCarSelection, cars.length, carsLoading, carsError])
+
+  // Load recent on mount
+  useEffect(() => { setRecent(getRecentLocations()) }, [])
 
   const handleCarSelect = (carId) => {
     setFormData(prev => ({
@@ -69,204 +121,104 @@ const RideBooking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Book a Ride</h1>
-          <p className="text-gray-300">Enter your trip details and we'll find you a driver</p>
+    <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-10">
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 mb-1">Book a Ride</h1>
+          <p className="text-sm text-gray-500">Enter trip details to see available cars.</p>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Main Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-gray-800 rounded-xl shadow-lg p-6">
-              <form onSubmit={handleLocationSubmit} className="space-y-6">
-                {/* Location Inputs */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Pickup Location
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      </div>
-                      <input
-                        type="text"
-                        name="pickupLocation"
-                        value={formData.pickupLocation}
-                        onChange={handleInputChange}
-                        placeholder="Enter pickup address or location"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
+          <div className="lg:col-span-2 space-y-8">
+            {showRebookBanner && (
+              <div className="flex items-start gap-3 p-4 rounded-lg border border-gray-300 bg-white shadow-token">
+                <div className="w-2 h-2 mt-2 rounded-full bg-gray-900" />
+                <div className="flex-1 text-sm text-gray-700">
+                  <span className="font-medium text-gray-900">Rebook Prefill:</span> We loaded your previous ride details. Adjust anything before confirming.
+                </div>
+                <button onClick={()=>setShowRebookBanner(false)} className="text-xs text-gray-500 hover:text-gray-800 font-medium">Dismiss</button>
+              </div>
+            )}
+            <div className="card p-6">
+              <form onSubmit={handleLocationSubmit} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Pickup Location" name="pickupLocation" value={formData.pickupLocation} onChange={handleInputChange} required placeholder="Enter pickup address" />
+                  <FormInput label="Drop-off Location" name="dropoffLocation" value={formData.dropoffLocation} onChange={handleInputChange} required placeholder="Enter destination" />
+                </div>
+                {recent.length > 0 && (
+                  <div className="-mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="text-[11px] text-gray-500 flex flex-wrap gap-2">
+                      {recent.map(r => (
+                        <button type="button" key={r} onClick={()=>setFormData(f=>({...f,pickupLocation:r}))} className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-[11px] text-gray-500 flex flex-wrap gap-2">
+                      {recent.map(r => (
+                        <button type="button" key={r+':d'} onClick={()=>setFormData(f=>({...f,dropoffLocation:r}))} className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">
+                          {r}
+                        </button>
+                      ))}
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Drop-off Location
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      </div>
-                      <input
-                        type="text"
-                        name="dropoffLocation"
-                        value={formData.dropoffLocation}
-                        onChange={handleInputChange}
-                        placeholder="Enter destination address"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Pickup Date" type="date" name="pickupDate" value={formData.pickupDate} min={new Date().toISOString().split('T')[0]} onChange={handleInputChange} required />
+                  <FormInput label="Pickup Time" type="time" name="pickupTime" value={formData.pickupTime} onChange={handleInputChange} required />
                 </div>
-
-                {/* Date and Time */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Pickup Date
-                    </label>
-                    <input
-                      type="date"
-                      name="pickupDate"
-                      value={formData.pickupDate}
-                      onChange={handleInputChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pickup Time
-                    </label>
-                    <input
-                      type="time"
-                      name="pickupTime"
-                      value={formData.pickupTime}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Passengers */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Passengers
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <label className="block">
+                    <span className="block text-xs font-medium tracking-wide text-gray-600 mb-1 uppercase">Passengers</span>
+                    <select name="passengers" value={formData.passengers} onChange={handleInputChange} className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900">
+                      {[1,2,3,4,5,6].map(n=><option key={n} value={n}>{n} Passenger{n>1?'s':''}</option>)}
+                    </select>
                   </label>
-                  <select
-                    name="passengers"
-                    value={formData.passengers}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="1">1 Passenger</option>
-                    <option value="2">2 Passengers</option>
-                    <option value="3">3 Passengers</option>
-                    <option value="4">4 Passengers</option>
-                    <option value="5">5 Passengers</option>
-                    <option value="6">6 Passengers</option>
-                  </select>
-                </div>
-
-                {/* Special Notes */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Special Notes (Optional)
+                  <label className="block">
+                    <span className="block text-xs font-medium tracking-wide text-gray-600 mb-1 uppercase">Notes (Optional)</span>
+                    <textarea name="notes" value={formData.notes} onChange={handleInputChange} rows={3} className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 resize-none" placeholder="Any preferences or instructions" />
                   </label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    placeholder="Any special requirements or instructions..."
-                    rows="3"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
                 </div>
-
                 {!showCarSelection && (
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
-                  >
-                    Find Available Cars
-                  </button>
+                  <button type="submit" className="btn btn-primary w-full">Find Available Cars</button>
                 )}
               </form>
-
-              {/* Car Selection */}
-              {showCarSelection && (
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Choose Your Ride</h3>
-                  {carsLoading && <div className="text-gray-500 text-sm">Loading available cars...</div>}
-                  {carsError && <div className="text-red-500 text-sm">{carsError}</div>}
-                  {!carsLoading && !carsError && cars.length === 0 && (
-                    <div className="text-gray-500 text-sm">No cars available for the selected time.</div>
-                  )}
-                  <div className="space-y-4">
-                    {cars.map((car) => {
-                      const capacity = car.capacity ? `${car.capacity} seats` : ''
-                      return (
-                        <div
-                          key={car._id || car.id}
-                          onClick={() => handleCarSelect(car._id || car.id)}
-                          className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                            formData.selectedCar === (car._id || car.id)
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3">
-                                <div className={`w-4 h-4 rounded-full border-2 ${
-                                  formData.selectedCar === (car._id || car.id)
-                                    ? 'border-blue-500 bg-blue-500'
-                                    : 'border-gray-300'
-                                }`}></div>
-                                <div>
-                                  <h4 className="font-semibold text-gray-900">{car.make ? `${car.make} ${car.model}` : car.name || 'Car'}</h4>
-                                  <p className="text-sm text-gray-600 capitalize">{car.type || car.category || ''}</p>
-                                  <p className="text-sm text-gray-500">{capacity}</p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              {car.ratePerKm && (
-                                <div className="text-xs text-gray-500">Rate/km: {car.ratePerKm}</div>
-                              )}
-                              {car.ratePerMin && (
-                                <div className="text-xs text-gray-500">Rate/min: {car.ratePerMin}</div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  {formData.selectedCar && (
-                    <button
-                      onClick={handleBooking}
-                      className="w-full mt-6 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200"
-                    >
-                      Confirm Booking
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
+            {showCarSelection && (
+              <div className="card p-6">
+                <h3 className="text-base font-semibold tracking-tight text-gray-900 mb-6">Choose Your Ride</h3>
+                {carsLoading && <div className="space-y-3">{Array.from({length:3}).map((_,i)=>(<Skeleton key={i} className="h-20 rounded-lg" />))}</div>}
+                {carsError && <div className="text-xs text-red-600">{carsError}</div>}
+                {!carsLoading && !carsError && cars.length === 0 && <div className="text-xs text-gray-500">No cars available for that time.</div>}
+                <div className="space-y-3">
+                  {cars.map(car => {
+                    const selected = formData.selectedCar === (car._id || car.id)
+                    return (
+                      <button type="button" onClick={()=>handleCarSelect(car._id || car.id)} key={car._id || car.id} className={`w-full text-left border rounded-lg px-4 py-3 flex items-center justify-between transition ${selected? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                        <div>
+                          <div className="font-medium text-gray-900 text-sm">{car.make ? `${car.make} ${car.model}` : car.name || 'Car'}</div>
+                          <div className="text-xs text-gray-500 capitalize">{car.type || car.category || ''}</div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {car.ratePerKm && <span className="text-[10px] text-gray-500">{car.ratePerKm} /km</span>}
+                          {car.ratePerMin && <span className="text-[10px] text-gray-500">{car.ratePerMin} /min</span>}
+                          <span className={`w-3 h-3 rounded-full border ${selected? 'bg-gray-900 border-gray-900' : 'border-gray-300'}`}></span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                {formData.selectedCar && (
+                  <button onClick={handleBooking} className="btn btn-primary w-full mt-6">Confirm Booking</button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Booking Summary</h3>
+            <div className="card p-6 sticky top-8">
+              <h3 className="text-sm font-medium tracking-wide uppercase text-gray-500 mb-4">Summary</h3>
               
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -296,10 +248,14 @@ const RideBooking = () => {
                 </div>
                 {formData.selectedCar && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Car Type:</span>
-                    <span className="font-medium text-gray-900">
-                      {carOptions.find(car => car.id === formData.selectedCar)?.name}
-                    </span>
+                    <span className="text-gray-600">Selected Car:</span>
+                    <span className="font-medium text-gray-900">{
+                      (() => {
+                        const c = cars.find(x => (x._id || x.id) === formData.selectedCar)
+                        if (!c) return formData.selectedCar
+                        return c.make ? `${c.make} ${c.model}` : (c.model || c.name || formData.selectedCar)
+                      })()
+                    }</span>
                   </div>
                 )}
               </div>

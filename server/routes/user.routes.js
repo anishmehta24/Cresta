@@ -25,6 +25,8 @@ router.put('/:id', authUser, [
     body('phone').optional().isLength({min: 10}).withMessage('Please enter a valid phone number'),
 ], userController.updateUserProfile);
 
+router.get('/:id/stats', authUser, userController.getUserStats);
+
 router.delete('/:id', authUser, userController.deleteUser);
 
 export default router;

@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { toast } from '../services/toastBus'
+import { addLocation, getRecentLocations } from '../services/recentLocations'
 import bookingService from '../services/bookingService'
+import { formatINR } from '../services/currency'
 import authService from '../services/authService'
+import FormInput from '../components/ui/FormInput'
+import { Skeleton } from '../components/ui/Skeleton'
 
 const CarRental = () => {
+  const location = useLocation()
   const [filters, setFilters] = useState({
     category: 'all',
     priceRange: 'all',
@@ -18,6 +24,9 @@ const CarRental = () => {
   const [pickupAddress, setPickupAddress] = useState('')
   const [rentalDates, setRentalDates] = useState({ start: '', end: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [initializedFromState, setInitializedFromState] = useState(false)
+  const [showRebookBanner, setShowRebookBanner] = useState(false)
+  const [recent, setRecent] = useState([])
 
   useEffect(() => {
     let mounted = true
@@ -37,6 +46,38 @@ const CarRental = () => {
     loadCars()
     return () => { mounted = false }
   }, [])
+
+  useEffect(() => { setRecent(getRecentLocations()) }, [])
+
+  // Prefill from rebook state once cars are loaded
+  useEffect(() => {
+    if (initializedFromState) return
+    const st = location.state
+    if (st && st.rebook) {
+      if (st.pickupAddress) setPickupAddress(st.pickupAddress)
+      if (st.startDate) setRentalDates(d => ({ ...d, start: st.startDate }))
+      if (st.endDate) setRentalDates(d => ({ ...d, end: st.endDate }))
+      if (Array.isArray(st.carIds) && st.carIds.length) {
+        // Defer cart population until cars list is fetched
+        const interval = setInterval(() => {
+          if (cars.length > 0) {
+            setRentalCart(() => {
+              const grouped = st.carIds.reduce((acc,id)=>{acc[id]=(acc[id]||0)+1;return acc}, {})
+              return Object.entries(grouped).map(([id, qty]) => {
+                const ref = cars.find(c => (c._id || c.id) === id)
+                return { key: id, ref, quantity: qty }
+              }).filter(i=>i.ref)
+            })
+            clearInterval(interval)
+          }
+        }, 200)
+        setTimeout(() => clearInterval(interval), 4000) // safety timeout
+      }
+      toast.info('Details prefilled from previous rental', { duration: 3000 })
+      setShowRebookBanner(true)
+    }
+    setInitializedFromState(true)
+  }, [location.state, initializedFromState, cars])
 
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
@@ -82,6 +123,8 @@ const CarRental = () => {
         carIds
       })
       alert('Rental created successfully')
+      addLocation(pickupAddress)
+      setRecent(getRecentLocations())
       setRentalCart([])
       setPickupAddress('')
       setRentalDates({ start: '', end: '' })
@@ -107,8 +150,8 @@ const CarRental = () => {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -128,13 +171,22 @@ const CarRental = () => {
               </Link>
             </div>
           </div>
+          {showRebookBanner && (
+            <div className="mt-6 flex items-start gap-3 p-4 rounded-lg border border-gray-300 bg-white shadow-token">
+              <div className="w-2 h-2 mt-2 rounded-full bg-gray-900" />
+              <div className="flex-1 text-sm text-gray-700">
+                <span className="font-medium text-gray-900">Rebook Prefill:</span> Previous rental details applied. You can modify before submitting.
+              </div>
+              <button onClick={()=>setShowRebookBanner(false)} className="text-xs text-gray-500 hover:text-gray-800 font-medium">Dismiss</button>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+  <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">Filters</h3>
+            <div className="card p-6 sticky top-8">
+              <h3 className="text-sm font-medium tracking-wide uppercase text-gray-500 mb-6">Filters</h3>
               
               {/* Category Filter */}
               <div className="mb-6">
@@ -223,42 +275,40 @@ const CarRental = () => {
 
           {/* Car Grid */}
           <div className="lg:col-span-3">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-gray-600">
-                {carsLoading ? 'Loading cars...' : carsError ? 'Error loading cars' : `Showing ${filteredCars.length} of ${cars.length} vehicles`}
-              </p>
-            </div>
-
-            {/* Rental Parameters */}
-            <div className="mb-6 bg-white rounded-xl shadow p-4 border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3">Rental Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Pickup Address</label>
-                  <input value={pickupAddress} onChange={e=>setPickupAddress(e.target.value)} placeholder="Enter pickup location" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
-                  <input type="date" value={rentalDates.start} min={new Date().toISOString().split('T')[0]} onChange={e=>setRentalDates(d=>({...d,start:e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
-                  <input type="date" value={rentalDates.end} min={rentalDates.start || new Date().toISOString().split('T')[0]} onChange={e=>setRentalDates(d=>({...d,end:e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                </div>
-                <div className="flex gap-2">
-                  <button disabled={!canSubmit} onClick={submitRental} className={`mt-5 flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${canSubmit ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>{submitting ? 'Submitting...' : 'Create Rental'}</button>
-                </div>
+            <div className="mb-6 card p-5">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500">{carsLoading ? 'Loading cars…' : carsError ? 'Error loading cars' : `Showing ${filteredCars.length} of ${cars.length} vehicles`}</p>
               </div>
-              {rentalCart.length > 0 && (
-                <div className="mt-4 text-xs text-gray-600">
-                  {rentalCart.length} distinct cars selected; total units {rentalCart.reduce((s,i)=>s+i.quantity,0)}
+            </div>
+            <div className="mb-8 card p-6">
+              <h3 className="text-sm font-medium tracking-wide uppercase text-gray-500 mb-4">Rental Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+                <div className="md:col-span-2 flex flex-col gap-2">
+                  <FormInput label="Pickup Address" value={pickupAddress} onChange={e=>setPickupAddress(e.target.value)} placeholder="Enter pickup location" />
+                  {recent.length > 0 && (
+                    <div className="flex flex-wrap gap-2 -mt-2">
+                      {recent.map(r => (
+                        <button type="button" key={r} onClick={()=>setPickupAddress(r)} className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-[11px] text-gray-600">{r}</button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+                <FormInput label="Start Date" type="date" value={rentalDates.start} min={new Date().toISOString().split('T')[0]} onChange={e=>setRentalDates(d=>({...d,start:e.target.value}))} />
+                <FormInput label="End Date" type="date" value={rentalDates.end} min={rentalDates.start || new Date().toISOString().split('T')[0]} onChange={e=>setRentalDates(d=>({...d,end:e.target.value}))} />
+                <div className="flex items-end h-full">
+                  <button disabled={!canSubmit} onClick={submitRental} className="btn btn-primary w-full disabled:opacity-50">{submitting ? 'Submitting…' : 'Create Rental'}</button>
+                </div>
+                {rentalCart.length > 0 && (
+                  <div className="text-[11px] text-gray-500 self-end">{rentalCart.length} cars; {rentalCart.reduce((s,i)=>s+i.quantity,0)} units</div>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {carsLoading && <div className="col-span-full text-gray-500 text-sm">Loading cars...</div>}
-              {carsError && <div className="col-span-full text-red-500 text-sm">{carsError}</div>}
+              {carsLoading && (
+                <div className="col-span-full space-y-4">{Array.from({length:6}).map((_,i)=>(<Skeleton key={i} className="h-40 rounded-xl" />))}</div>
+              )}
+              {carsError && <div className="col-span-full text-xs text-red-600">{carsError}</div>}
               {!carsLoading && !carsError && filteredCars.map((car) => {
                 const key = car._id || car.id
                 const inCart = rentalCart.find(i => i.key === key)
@@ -310,8 +360,8 @@ const CarRental = () => {
                       <div>
                         {car.pricePerDay ? (
                           <>
-                            <span className="text-2xl font-bold text-gray-900">${car.pricePerDay}</span>
-                            <span className="text-gray-600">/day</span>
+                            <span className="text-2xl font-bold text-gray-900">{formatINR(car.pricePerDay)}</span>
+                            <span className="text-gray-600 ml-1">/day</span>
                           </>
                         ) : (
                           <span className="text-sm text-gray-500">No daily rate</span>

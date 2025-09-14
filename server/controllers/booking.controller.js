@@ -1,5 +1,6 @@
 import * as bookingService from '../services/booking.service.js';
 import { validationResult } from 'express-validator';
+import bookingModel from '../models/booking.model.js';
 
 // Create booking (general)
 export const createBooking = async (req, res, next) => {
@@ -158,6 +159,25 @@ export const completeRide = async (req, res, next) => {
         const booking = await bookingService.updateBookingStatus(bookingId, 'COMPLETED');
         
         res.status(200).json({ message: 'Ride completed successfully', booking });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+// Cancel booking (user-owned)
+export const cancelBooking = async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const booking = await bookingModel.findById(bookingId);
+        if (!booking) return res.status(404).json({ error: 'Booking not found' });
+        if (booking.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        if (!['PENDING','CONFIRMED','ONGOING'].includes(booking.status)) {
+            return res.status(400).json({ error: 'Cannot cancel this booking' });
+        }
+        const updated = await bookingService.updateBookingStatus(bookingId, 'CANCELLED');
+        res.status(200).json({ message: 'Booking cancelled', booking: updated });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

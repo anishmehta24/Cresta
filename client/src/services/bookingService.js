@@ -49,6 +49,18 @@ const bookingService = {
     const { data } = await apiClient.get('/dashboard')
     return data
   },
+  getUserStats: async (userId) => {
+    const { data } = await apiClient.get(`/users/${userId}/stats`)
+    return data
+  },
+  cancelRide: async (id) => {
+    const { data } = await apiClient.post(`/rides/${id}/cancel`)
+    return data.booking
+  },
+  cancelRental: async (id) => {
+    const { data } = await apiClient.post(`/rentals/${id}/cancel`)
+    return data.booking
+  },
   // Basic profile fetch (if needed separate from auth context refresh)
   getUserProfile: async (userId) => {
     const { data } = await apiClient.get(`/users/${userId}`)

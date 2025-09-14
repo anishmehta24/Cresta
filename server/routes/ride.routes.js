@@ -26,4 +26,7 @@ router.put('/:id/status', authUser, authDriver, [
     body('status').isIn(['PENDING', 'CONFIRMED', 'ONGOING', 'COMPLETED', 'CANCELLED']).withMessage('Invalid status'),
 ], bookingController.updateBookingStatus);
 
+// Cancel ride (user)
+router.post('/:id/cancel', authUser, bookingController.cancelBooking);
+
 export default router;

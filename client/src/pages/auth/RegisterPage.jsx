@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import FormInput from '../../components/ui/FormInput'
 
 const RegisterPage = () => {
   const navigate = useNavigate()
@@ -86,272 +87,74 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
-            <span className="text-2xl font-bold text-white">Cresta</span>
+    <div className="min-h-screen flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-2xl">
+        <div className="text-center mb-10">
+          <Link to="/" className="inline-flex items-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center text-white font-bold text-xl">C</div>
+            <span className="text-2xl font-semibold tracking-tight text-gray-900">Cresta</span>
           </Link>
+          <h1 className="mt-6 text-2xl font-semibold tracking-tight text-gray-900">Create your account</h1>
+          <p className="mt-2 text-sm text-gray-500">Already have an account? <Link to="/login" className="underline underline-offset-4 hover:text-gray-900">Sign in</Link></p>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-white">
-          Create your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-400">
-          Already have an account?{' '}
-          <Link
-            to="/login"
-            className="font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200"
-          >
-            Sign in here
-          </Link>
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
-        <div className="bg-gray-800 py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-gray-700">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="card p-8">
+          <form className="space-y-10" onSubmit={handleSubmit}>
             {/* General Error Message */}
-            {errors.general && (
-              <div className="rounded-md bg-red-900 bg-opacity-20 p-4 border border-red-600">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-400">
-                      {errors.general}
-                    </h3>
-                  </div>
-                </div>
-              </div>
-            )}
+            {errors.general && <div className="bg-red-50 border border-red-200 rounded px-3 py-2 text-xs font-medium text-red-600">{errors.general}</div>}
 
             {/* Personal Information */}
             <div>
-              <h3 className="text-lg font-medium text-white mb-4">Personal Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* First Name */}
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">
-                    First Name *
-                  </label>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-500 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                      errors.firstName ? 'border-red-300' : 'border-gray-600'
-                    }`}
-                    placeholder="Enter your first name"
-                  />
-                  {errors.firstName && <p className="mt-1 text-sm text-red-400">{errors.firstName}</p>}
-                </div>
-
-                {/* Last Name */}
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-300">
-                    Last Name *
-                  </label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-500 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                      errors.lastName ? 'border-red-300' : 'border-gray-600'
-                    }`}
-                    placeholder="Enter your last name"
-                  />
-                  {errors.lastName && <p className="mt-1 text-sm text-red-400">{errors.lastName}</p>}
-                </div>
+              <h3 className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-4">Personal Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormInput label="First Name *" name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="Jane" error={errors.firstName} />
+                <FormInput label="Last Name *" name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Doe" error={errors.lastName} />
               </div>
             </div>
 
             {/* Contact Information */}
             <div>
-              <h3 className="text-lg font-medium text-white mb-4">Contact Information</h3>
-              <div className="space-y-4">
-                {/* Email */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                    Email Address *
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-500 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                      errors.email ? 'border-red-300' : 'border-gray-600'
-                    }`}
-                    placeholder="Enter your email address"
-                  />
-                  {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email}</p>}
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
-                    Phone Number *
-                  </label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-500 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                      errors.phone ? 'border-red-300' : 'border-gray-600'
-                    }`}
-                    placeholder="Enter your phone number"
-                  />
-                  {errors.phone && <p className="mt-1 text-sm text-red-400">{errors.phone}</p>}
-                </div>
+              <h3 className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-4">Contact Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormInput label="Email *" name="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="you@example.com" error={errors.email} />
+                <FormInput label="Phone *" name="phone" type="tel" value={formData.phone} onChange={handleInputChange} placeholder="1234567890" error={errors.phone} />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <h3 className="text-lg font-medium text-white mb-4">Security</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Password */}
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                    Password *
-                  </label>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-500 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                      errors.password ? 'border-red-300' : 'border-gray-600'
-                    }`}
-                    placeholder="Create a password"
-                  />
-                  {errors.password && <p className="mt-1 text-sm text-red-400">{errors.password}</p>}
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300">
-                    Confirm Password *
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-500 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                      errors.confirmPassword ? 'border-red-300' : 'border-gray-600'
-                    }`}
-                    placeholder="Confirm your password"
-                  />
-                  {errors.confirmPassword && <p className="mt-1 text-sm text-red-400">{errors.confirmPassword}</p>}
-                </div>
+              <h3 className="text-xs font-semibold tracking-wide uppercase text-gray-500 mb-4">Security</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormInput label="Password *" name="password" type="password" value={formData.password} onChange={handleInputChange} placeholder="Create a password" error={errors.password} />
+                <FormInput label="Confirm Password *" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleInputChange} placeholder="Confirm password" error={errors.confirmPassword} />
               </div>
             </div>
 
             {/* Agreements */}
             <div className="space-y-4">
-              <div className="flex items-start">
-                <input
-                  id="agreesToTerms"
-                  name="agreesToTerms"
-                  type="checkbox"
-                  checked={formData.agreesToTerms}
-                  onChange={handleInputChange}
-                  className={`mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded bg-gray-700 ${
-                    errors.agreesToTerms ? 'border-red-300' : ''
-                  }`}
-                />
-                <label htmlFor="agreesToTerms" className="ml-2 block text-sm text-gray-300">
-                  I agree to the{' '}
-                  <a href="#" className="text-blue-400 hover:text-blue-300">Terms of Service</a>
-                  {' '}and{' '}
-                  <a href="#" className="text-blue-400 hover:text-blue-300">Privacy Policy</a> *
-                </label>
-              </div>
-              {errors.agreesToTerms && <p className="text-sm text-red-400">{errors.agreesToTerms}</p>}
-
-              <div className="flex items-start">
-                <input
-                  id="wantsNewsletter"
-                  name="wantsNewsletter"
-                  type="checkbox"
-                  checked={formData.wantsNewsletter}
-                  onChange={handleInputChange}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded bg-gray-700"
-                />
-                <label htmlFor="wantsNewsletter" className="ml-2 block text-sm text-gray-300">
-                  I would like to receive promotional emails and updates about new features
-                </label>
-              </div>
+              <label className="flex items-start gap-3 text-xs text-gray-600">
+                <input id="agreesToTerms" name="agreesToTerms" type="checkbox" checked={formData.agreesToTerms} onChange={handleInputChange} className={`mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 ${errors.agreesToTerms ? 'border-red-400' : ''}`} />
+                <span>I agree to the <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a> *</span>
+              </label>
+              {errors.agreesToTerms && <p className="text-xs text-red-600">{errors.agreesToTerms}</p>}
+              <label className="flex items-start gap-3 text-xs text-gray-600">
+                <input id="wantsNewsletter" name="wantsNewsletter" type="checkbox" checked={formData.wantsNewsletter} onChange={handleInputChange} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
+                <span>Send me occasional product updates and offers</span>
+              </label>
             </div>
 
             {/* Submit Button */}
             <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white transition-colors duration-200 ${
-                  isLoading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                }`}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Creating account...
-                  </div>
-                ) : (
-                  'Create Account'
-                )}
+              <button type="submit" disabled={isLoading} className="btn btn-primary w-full disabled:opacity-50">
+                {isLoading ? 'Creating Account…' : 'Create Account'}
               </button>
             </div>
           </form>
-
-          {/* Benefits */}
-          <div className="mt-8 pt-6 border-t border-gray-700">
-            <div className="text-center">
-              <p className="text-sm text-gray-400 mb-4">Join thousands of satisfied customers</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex items-center justify-center text-sm text-gray-400">
-                  <svg className="w-4 h-4 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Instant Bookings
-                </div>
-                <div className="flex items-center justify-center text-sm text-gray-400">
-                  <svg className="w-4 h-4 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  24/7 Support
-                </div>
-                <div className="flex items-center justify-center text-sm text-gray-400">
-                  <svg className="w-4 h-4 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Best Rates
-                </div>
-              </div>
-            </div>
+          <div className="mt-10 pt-6 border-t border-gray-200">
+            <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-gray-500">
+              <li className="flex items-center justify-center gap-2">✓ Instant Bookings</li>
+              <li className="flex items-center justify-center gap-2">✓ 24/7 Support</li>
+              <li className="flex items-center justify-center gap-2">✓ Best Rates</li>
+            </ul>
           </div>
         </div>
       </div>
